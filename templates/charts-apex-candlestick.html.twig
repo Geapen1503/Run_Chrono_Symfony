@@ -1,0 +1,82 @@
+{% extends 'partials/layouts/master2.html.twig' %}
+
+{% block title %}Apex Candlestick Chart{% endblock %}
+
+{% block head_title %}Candlestick Chart{% endblock %}
+{% block head_sub_title %}ApexChat
+{% endblock %}
+
+{% set buttonTitle = 'Share' %}
+{% set modalTarget = 'shareModal' %}
+
+{% block page_contents %}
+
+  <div class="row g-4">
+    <!-- Basic Candlestick Chart -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100 mb-0">
+        <div class="card-header">
+          <h6 class="card-title mb-0 fw-semibold">Basic Candlestick Chart</h6>
+        </div>
+        <div class="card-body px-0">
+          <div id="basic_candlestick_chart" class="apexcharts-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Candlestick Synced with Brush Chart (Combo) -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100 mb-0">
+        <div class="card-header">
+          <h6 class="card-title mb-0 fw-semibold">Candlestick Synced with Brush Chart (Combo)</h6>
+        </div>
+        <div class="card-body px-0">
+          <div id="candlestick_with_brush_chart" class="apexcharts-container"></div>
+          <div id="combo_candlestick_chart" class="apexcharts-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CandleStick Chart - Category X-axis -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100 mb-0">
+        <div class="card-header">
+          <h6 class="card-title mb-0 fw-semibold">CandleStick Chart - Category X-axis</h6>
+        </div>
+        <div class="card-body px-0">
+          <div id="candleStick_category_X_axis_chart" class="apexcharts-container apexcharts-white"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Candlestick with line -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100 mb-0">
+        <div class="card-header">
+          <h6 class="card-title mb-0 fw-semibold">Candlestick with line</h6>
+        </div>
+        <div class="card-body px-0">
+          <div id="candlestick_with_line_chart" class="apexcharts-container"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+{% endblock %}
+
+{% block vendor_scripts %}
+
+  <!-- ApexChat js -->
+  <script src="assets/libs/apexcharts/apexcharts.min.js"></script>
+  <script src="https://apexcharts.com/samples/assets/ohlc.js"></script>
+
+  <!-- Day js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.13/dayjs.min.js"></script>
+
+  <!-- ApexChat Candlestick init -->
+  <script src="assets/js/charts/apexcharts-config.init.js"></script>
+  <script src="assets/js/charts/apexcharts-candlestick.init.js"></script>
+
+  <!-- App js -->
+  <script type="module" src="assets/js/app.js"></script>
+{% endblock %}
