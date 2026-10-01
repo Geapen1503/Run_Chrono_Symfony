@@ -15,7 +15,8 @@
 ###< phpunit/phpunit ###
 
 ###> symfony/asset-mapper ###
-/public/assets/
+# /public/assets/ est le thème Herozi (à versionner et livrer).
+# Ne pas ignorer ce dossier.
 /assets/vendor/
 ###< symfony/asset-mapper ###
 
@@ -30,5 +31,3 @@
 /composer.phar
 /composer-setup.php
 ###< local tooling ###
-AGENTS.md
-AGENTS.md
