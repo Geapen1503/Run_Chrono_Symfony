@@ -14,8 +14,11 @@ Sibling `D:\RunChrono\RCR\runchrono symfony` is **not** the ship target.
 
 ### Features & UI
 
-For every feature/UI task: take templates/layout/components from  
-`D:\RunChrono\RCR\Herozi_Symfony_v1.1.0\Admin` and adapt them into this app.
+For every feature/UI task:
+
+1. Take templates/layout/components from `D:\RunChrono\RCR\Herozi_Symfony_v1.1.0\Admin`
+2. **Copy** the matching static assets into **`public/assets/`** in this repo
+3. Those files are **part of GitHub** — never leave theme files only in the Herozi folder
 
 ### Language
 
