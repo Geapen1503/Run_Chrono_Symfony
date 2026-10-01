@@ -1,6 +1,9 @@
-{# CSS / JS de tête Herozi adaptés — chemins via asset() Symfony #}
+{# CSS / JS de tête Herozi — chemins via asset() Symfony #}
 {% if layout is defined and layout == 'auth' %}
     <script src="{{ asset('assets/js/layout/layout-auth.js') }}"></script>
+{% elseif layout is defined and layout == 'horizontal' %}
+    <script>sessionStorage.setItem('data-main-layout', 'horizontal');</script>
+    <script src="{{ asset('assets/js/layout/layout-horizontal.js') }}"></script>
 {% else %}
     <script src="{{ asset('assets/js/layout/layout-default.js') }}"></script>
 {% endif %}

@@ -1,0 +1,81 @@
+{# En-tête admin Herozi (console /rc — layout horizontal) #}
+<header class="app-header">
+    <div class="container-fluid">
+        <div class="nav-header">
+            <div class="header-left hstack gap-3">
+                <div class="app-sidebar-logo app-horizontal-logo justify-content-center align-items-center">
+                    <a href="{{ path('rc_home') }}">
+                        <img height="35" class="app-sidebar-logo-default" alt="RunChrono" loading="lazy" src="{{ asset('assets/images/avatar/logo-runchrono.png') }}">
+                        <img height="40" class="app-sidebar-logo-minimize" alt="RunChrono" loading="lazy" src="{{ asset('assets/images/avatar/logo-runchrono.png') }}">
+                    </a>
+                </div>
+
+                {# Ouverture du menu horizontal sur petit écran #}
+                <button class="btn btn-light-light icon-btn d-lg-none small-screen-horizontal-toggle" type="button" aria-expanded="false" aria-controls="main-menu">
+                    <span class="visually-hidden">Menu</span>
+                    <i class="ri-arrow-right-fill"></i>
+                </button>
+
+                {# Menu mobile (offcanvas) #}
+                <button class="btn btn-light-light icon-btn d-md-none small-screen-toggle" id="smallScreenSidebarLabel" type="button" data-bs-toggle="offcanvas" data-bs-target="#smallScreenSidebar" aria-controls="smallScreenSidebar">
+                    <span class="visually-hidden">Menu mobile</span>
+                    <i class="ri-menu-2-fill"></i>
+                </button>
+            </div>
+
+            <div class="header-right hstack gap-3">
+                <div class="hstack gap-0 gap-sm-1">
+                    <div class="dropdown features-dropdown d-none d-sm-block">
+                        <button type="button" class="btn icon-btn btn-text-primary rounded-circle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="visually-hidden">Thème</span>
+                            <i class="ri-sun-line fs-20"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end">
+                            <div class="dropdown-item cursor-pointer" id="light-theme">
+                                <span class="hstack gap-2 align-middle"><i class="ri-sun-line"></i>Clair</span>
+                            </div>
+                            <div class="dropdown-item cursor-pointer" id="dark-theme">
+                                <span class="hstack gap-2 align-middle"><i class="ri-moon-clear-line"></i>Sombre</span>
+                            </div>
+                            <div class="dropdown-item cursor-pointer" id="system-theme">
+                                <span class="hstack gap-2 align-middle"><i class="ri-computer-line"></i>Système</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" id="fullscreen-button" class="btn icon-btn btn-text-primary rounded-circle custom-toggle d-none d-sm-block" aria-pressed="false">
+                        <span class="visually-hidden">Plein écran</span>
+                        <span class="icon-on"><i class="ri-fullscreen-exit-line fs-16"></i></span>
+                        <span class="icon-off"><i class="ri-fullscreen-line fs-16"></i></span>
+                    </button>
+                </div>
+
+                <div class="dropdown profile-dropdown features-dropdown">
+                    <button type="button" id="accountNavbarDropdown" class="btn profile-btn shadow-none px-0 hstack gap-0 gap-sm-3" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+                        <span class="position-relative">
+                            <span class="avatar-item avatar overflow-hidden">
+                                <img class="img-fluid" src="{{ asset('assets/images/avatar/logo-runchrono.png') }}" alt="RunChrono">
+                            </span>
+                            <span class="position-absolute border-2 border border-white h-12px w-12px rounded-circle bg-success end-0 bottom-0"></span>
+                        </span>
+                        <span>
+                            <span class="h6 d-none d-xl-inline-block text-start fw-semibold mb-0">
+                                {{ app.user ? app.user.userIdentifier : 'Admin' }}
+                            </span>
+                            <span class="d-none d-xl-block fs-12 text-start text-muted">Administrateur</span>
+                        </span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="accountNavbarDropdown">
+                        <div class="dropdown-header">
+                            <span class="fw-semibold">{{ app.user ? app.user.userIdentifier : 'Admin' }}</span>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="{{ path('app_logout') }}">
+                            <i class="ri-logout-box-r-line me-2"></i>Se déconnecter
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>

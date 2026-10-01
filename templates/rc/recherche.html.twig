@@ -1,0 +1,51 @@
+{% extends 'partials/layouts/master.html.twig' %}
+
+{# Page défaut Phase 0.4 — coquille recherche (logique métier = Phase 2.1) #}
+
+{% block page_title %}Recherche info coureur{% endblock %}
+{% block head_title %}Recherche info coureur{% endblock %}
+{% block head_sub_title %}Participants{% endblock %}
+
+{% block page_contents %}
+    <div class="row">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-1">Recherche coureur</h5>
+                    <p class="mb-0 card-subtitle fs-13 text-muted">
+                        Équivalent legacy <code>info_coureur.php</code> — contenu par défaut de la console live.
+                    </p>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="{{ path('rc_participants_recherche') }}" class="row g-4">
+                        <div class="col-md-4">
+                            <label class="form-label" for="dossard">Dossard</label>
+                            <input type="text" class="form-control" id="dossard" name="dossard" placeholder="ex. 123" value="{{ app.request.query.get('dossard') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="nom">Nom</label>
+                            <input type="text" class="form-control" id="nom" name="nom" placeholder="Nom" value="{{ app.request.query.get('nom') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="prenom">Prénom</label>
+                            <input type="text" class="form-control" id="prenom" name="prenom" placeholder="Prénom" value="{{ app.request.query.get('prenom') }}">
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ri-search-line me-1"></i>Rechercher
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="alert alert-info mt-5 mb-0" role="status">
+                        La recherche métier (tables <code>run_*</code>) sera branchée en Phase 2.1.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block vendor_scripts %}
+    <script type="module" src="{{ asset('assets/js/app.js') }}"></script>
+{% endblock %}

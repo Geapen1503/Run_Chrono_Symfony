@@ -23,7 +23,8 @@ security:
                 login_path: app_login
                 check_path: app_login
                 enable_csrf: true
-                default_target_path: app_home
+                # Après login → console live /rc/
+                default_target_path: rc_home
                 username_parameter: _username
                 password_parameter: _password
             remember_me:
@@ -37,8 +38,8 @@ security:
     access_control:
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/$, roles: PUBLIC_ACCESS }
-        # À renforcer plus tard quand d'autres routes admin existent :
-        # - { path: ^/, roles: ROLE_ADMIN }
+        # Console admin live protégée
+        - { path: ^/rc, roles: ROLE_ADMIN }
 
 when@test:
     security:

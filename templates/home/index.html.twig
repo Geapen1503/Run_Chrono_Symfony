@@ -12,6 +12,7 @@
 
         {% if app.user %}
             <p>Connecté : <strong>{{ app.user.userIdentifier }}</strong></p>
+            <p><a href="{{ path('rc_home') }}">Ouvrir la console live (/rc)</a></p>
             <p><a href="{{ path('app_logout') }}">Se déconnecter</a></p>
         {% else %}
             <p>Vous n'êtes pas connecté.</p>
