@@ -1,0 +1,136 @@
+{% extends 'partials/layouts/master-auth.html.twig' %}
+
+{% set is_auth_page = true %}
+
+{% block page_title %}Connexion{% endblock %}
+
+{% block head_scripts %}
+    <script>
+        window.DEFAULT_VALUES = window.DEFAULT_VALUES || {};
+        DEFAULT_VALUES.AUTH_LAYOUT = true;
+    </script>
+{% endblock %}
+
+{% block body %}
+    <div class="account-pages">
+        <img src="{{ asset('assets/images/auth/auth_bg.jpeg') }}" alt="auth_bg" class="auth-bg light">
+        <img src="{{ asset('assets/images/auth/auth_bg_dark.jpg') }}" alt="auth_bg_dark" class="auth-bg dark">
+        <div class="container">
+            <div class="justify-content-center row gy-0">
+
+                <div class="col-lg-6 auth-banners">
+                    <div class="bg-login card card-body m-0 h-100 border-0">
+                        <img src="{{ asset('assets/images/auth/bg-img-2.png') }}" class="img-fluid auth-banner" alt="auth-banner">
+                        <div class="auth-contain">
+                            <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-indicators">
+                                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                                    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                                </div>
+                                <div class="carousel-inner">
+                                    <div class="carousel-item active">
+                                        <div class="text-center text-white my-4 p-4">
+                                            <h3 class="text-white">Chronométrage</h3>
+                                            <p class="mt-3">Connectez-vous pour gérer vos courses, imports et classements RunChrono.</p>
+                                        </div>
+                                    </div>
+                                    <div class="carousel-item">
+                                        <div class="text-center text-white my-4 p-4">
+                                            <h3 class="text-white">Opérations jour J</h3>
+                                            <p class="mt-3">Suivi des arrivées, speaker, podiums et exports fédéraux.</p>
+                                        </div>
+                                    </div>
+                                    <div class="carousel-item">
+                                        <div class="text-center text-white my-4 p-4">
+                                            <h3 class="text-white">Administration</h3>
+                                            <p class="mt-3">Paramétrage des éditions, engagés et publication des résultats.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="auth-box card card-body m-0 h-100 border-0 justify-content-center">
+                        <div class="mb-5 text-center">
+                            <h4 class="fw-normal">Bienvenue sur <span class="fw-bold text-primary">RunChrono</span></h4>
+                            <p class="text-muted mb-0">Saisissez vos identifiants pour accéder à l'administration.</p>
+                        </div>
+
+                        {% if error %}
+                            <div class="alert alert-danger" role="alert">
+                                {{ error.messageKey|trans(error.messageData, 'security') }}
+                            </div>
+                        {% endif %}
+
+                        {% if app.user %}
+                            <div class="alert alert-info" role="alert">
+                                Vous êtes déjà connecté en tant que {{ app.user.userIdentifier }}.
+                                <a href="{{ path('app_logout') }}">Se déconnecter</a>
+                            </div>
+                        {% endif %}
+
+                        <form class="form-custom mt-10" method="post" action="{{ path('app_login') }}">
+                            <div class="mb-5">
+                                <label class="form-label" for="username">Email<span class="text-danger ms-1">*</span></label>
+                                <input
+                                    type="email"
+                                    class="form-control"
+                                    id="username"
+                                    name="_username"
+                                    value="{{ last_username }}"
+                                    placeholder="votre@email.fr"
+                                    autocomplete="username"
+                                    required
+                                    autofocus
+                                >
+                            </div>
+
+                            <div class="mb-5">
+                                <label class="form-label" for="password">Mot de passe<span class="text-danger ms-1">*</span></label>
+                                <div class="input-group">
+                                    <input
+                                        type="password"
+                                        id="password"
+                                        class="form-control"
+                                        name="_password"
+                                        placeholder="Votre mot de passe"
+                                        autocomplete="current-password"
+                                        required
+                                        data-visible="false"
+                                    >
+                                    <a class="input-group-text bg-transparent toggle-password" href="javascript:;" data-target="password">
+                                        <i class="ri-eye-off-line text-muted toggle-icon"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="row mb-5">
+                                <div class="col-sm-6">
+                                    <div class="form-check form-check-sm d-flex align-items-center gap-2 mb-0">
+                                        <input class="form-check-input" type="checkbox" name="_remember_me" value="1" id="remember-me">
+                                        <label class="form-check-label" for="remember-me">Se souvenir de moi</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                            <button type="submit" class="btn btn-primary rounded-2 w-100">
+                                <span class="indicator-label">Se connecter</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block page_scripts %}
+    <script type="module" src="{{ asset('assets/js/app.js') }}"></script>
+{% endblock %}

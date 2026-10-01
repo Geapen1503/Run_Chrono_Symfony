@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Accueil - Chrono Symfony{% endblock %}
+{% block title %}Accueil - RunChrono{% endblock %}
 
 {% block body %}
     <style>
@@ -10,6 +10,12 @@
     <div class="exemple-wrapper">
         <h1>{{ titre_page }}</h1>
 
-        <p>La première page Run Chrono Symfony!</p>
+        {% if app.user %}
+            <p>Connecté : <strong>{{ app.user.userIdentifier }}</strong></p>
+            <p><a href="{{ path('app_logout') }}">Se déconnecter</a></p>
+        {% else %}
+            <p>Vous n'êtes pas connecté.</p>
+            <p><a href="{{ path('app_login') }}">Aller à la page de connexion</a></p>
+        {% endif %}
     </div>
 {% endblock %}

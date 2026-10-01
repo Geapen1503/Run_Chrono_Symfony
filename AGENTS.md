@@ -1,5 +1,29 @@
 # AGENTS.md
 
+## CRITICAL — RunChrono workspace
+
+| Role | Path |
+|------|------|
+| **This repo = Write + GitHub ONLY** | `D:\RunChrono\RCR\run chrono symfony` |
+| Theme / UI (adapt from) | `D:\RunChrono\RCR\Herozi_Symfony_v1.1.0\Admin` |
+| Legacy domain reference | `D:\RunChrono\RCR\RUN_CHRONO_TEST` |
+
+Only **application code** under this folder is submitted to GitHub.  
+**Not published:** `memory-bank/`, `AGENTS.md`, `.cursorrules`, `.cursor/`, agent `.md` notes (gitignored).  
+Sibling `D:\RunChrono\RCR\runchrono symfony` is **not** the ship target.
+
+### Features & UI
+
+For every feature/UI task: take templates/layout/components from  
+`D:\RunChrono\RCR\Herozi_Symfony_v1.1.0\Admin` and adapt them into this app.
+
+### Language
+
+- **Comments in code:** French
+- UI strings: French by default
+
+---
+
 This is a Symfony project. Check `composer.json` for the exact Symfony/PHP version
 in use, and read `symfony.lock` to see which recipes ran. Don't assume Doctrine,
 Twig, API Platform, Messenger, or Lock are installed unless one of those says so.
