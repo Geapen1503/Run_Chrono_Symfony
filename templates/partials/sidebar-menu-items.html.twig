@@ -1,0 +1,155 @@
+{# Menu latéral / barre horizontale — 7 sections console live #}
+{% set route = app.request.attributes.get('_route') %}
+
+<ul class="main-menu" id="all-menu-items" role="menu">
+    <li class="menu-title" role="presentation">Console live</li>
+
+    {# Phase 1 — Import DAG #}
+    <li class="slide {{ route starts with 'rc_import_' ? 'open' : '' }}">
+        <a href="#!" class="side-menu__item" role="menuitem">
+            <span class="side_menu_icon"><i class="ri-upload-2-line"></i></span>
+            <span class="side-menu__label">1. Import DAG</span>
+            <i class="ri-arrow-down-s-line side-menu__angle"></i>
+        </a>
+        <ul class="slide-menu" role="menu">
+            <li class="slide">
+                <a href="{{ path('rc_import_dag') }}" class="side-menu__item {{ route == 'rc_import_dag' ? 'active' : '' }}" role="menuitem">Dag</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_import_abandon') }}" class="side-menu__item {{ route == 'rc_import_abandon' ? 'active' : '' }}" role="menuitem">Abandon coureur</a>
+            </li>
+        </ul>
+    </li>
+
+    {# Phase 2 — Participants #}
+    <li class="slide {{ route starts with 'rc_participants_' ? 'open' : '' }}">
+        <a href="#!" class="side-menu__item" role="menuitem">
+            <span class="side_menu_icon"><i class="ri-group-line"></i></span>
+            <span class="side-menu__label">2. Participants</span>
+            <i class="ri-arrow-down-s-line side-menu__angle"></i>
+        </a>
+        <ul class="slide-menu" role="menu">
+            <li class="slide">
+                <a href="{{ path('rc_participants_recherche') }}" class="side-menu__item {{ route == 'rc_participants_recherche' ? 'active' : '' }}" role="menuitem">Recherche info coureur</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_participants_liste') }}" class="side-menu__item {{ route == 'rc_participants_liste' ? 'active' : '' }}" role="menuitem">Liste complète</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_participants_heures_depart') }}" class="side-menu__item {{ route == 'rc_participants_heures_depart' ? 'active' : '' }}" role="menuitem">Heures de départ</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_participants_delta_temps') }}" class="side-menu__item {{ route == 'rc_participants_delta_temps' ? 'active' : '' }}" role="menuitem">Calcul delta temps</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_participants_rgpd') }}" class="side-menu__item {{ route == 'rc_participants_rgpd' ? 'active' : '' }}" role="menuitem">RGPD — Anonymisation</a>
+            </li>
+        </ul>
+    </li>
+
+    {# Phase 3 — Résultats #}
+    <li class="slide {{ route starts with 'rc_resultats_' ? 'open' : '' }}">
+        <a href="#!" class="side-menu__item" role="menuitem">
+            <span class="side_menu_icon"><i class="ri-trophy-line"></i></span>
+            <span class="side-menu__label">3. Résultats</span>
+            <i class="ri-arrow-down-s-line side-menu__angle"></i>
+        </a>
+        <ul class="slide-menu" role="menu">
+            <li class="slide">
+                <a href="{{ path('rc_resultats_classements') }}" class="side-menu__item {{ route == 'rc_resultats_classements' ? 'active' : '' }}" role="menuitem">Classements web</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_resultats_podiums') }}" class="side-menu__item {{ route == 'rc_resultats_podiums' ? 'active' : '' }}" role="menuitem">Podiums</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_resultats_top') }}" class="side-menu__item {{ route == 'rc_resultats_top' ? 'active' : '' }}" role="menuitem">Classement TOP N</a>
+            </li>
+        </ul>
+    </li>
+
+    {# Phase 4 — Inscriptions #}
+    <li class="slide {{ route starts with 'rc_inscriptions_' ? 'open' : '' }}">
+        <a href="#!" class="side-menu__item" role="menuitem">
+            <span class="side_menu_icon"><i class="ri-user-add-line"></i></span>
+            <span class="side-menu__label">4. Inscriptions</span>
+            <i class="ri-arrow-down-s-line side-menu__angle"></i>
+        </a>
+        <ul class="slide-menu" role="menu">
+            <li class="slide">
+                <a href="{{ path('rc_inscriptions_solo') }}" class="side-menu__item {{ route == 'rc_inscriptions_solo' ? 'active' : '' }}" role="menuitem">Coureur (solo)</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_inscriptions_duo') }}" class="side-menu__item {{ route == 'rc_inscriptions_duo' ? 'active' : '' }}" role="menuitem">DUO</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_inscriptions_trio') }}" class="side-menu__item {{ route == 'rc_inscriptions_trio' ? 'active' : '' }}" role="menuitem">TRIO</a>
+            </li>
+        </ul>
+    </li>
+
+    {# Phase 5 — Infos diverses #}
+    <li class="slide {{ route starts with 'rc_infos_' ? 'open' : '' }}">
+        <a href="#!" class="side-menu__item" role="menuitem">
+            <span class="side_menu_icon"><i class="ri-information-line"></i></span>
+            <span class="side-menu__label">5. Infos diverses</span>
+            <i class="ri-arrow-down-s-line side-menu__angle"></i>
+        </a>
+        <ul class="slide-menu" role="menu">
+            <li class="slide">
+                <a href="{{ path('rc_infos_clubs') }}" class="side-menu__item {{ route == 'rc_infos_clubs' ? 'active' : '' }}" role="menuitem">Clubs représentés</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_infos_non_arrives') }}" class="side-menu__item {{ route == 'rc_infos_non_arrives' ? 'active' : '' }}" role="menuitem">Dossards non arrivés</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_infos_tirage') }}" class="side-menu__item {{ route == 'rc_infos_tirage' ? 'active' : '' }}" role="menuitem">Tirage au sort</a>
+            </li>
+        </ul>
+    </li>
+
+    {# Phase 6 — Actions diverses #}
+    <li class="slide {{ route starts with 'rc_actions_' ? 'open' : '' }}">
+        <a href="#!" class="side-menu__item" role="menuitem">
+            <span class="side_menu_icon"><i class="ri-tools-line"></i></span>
+            <span class="side-menu__label">6. Actions diverses</span>
+            <i class="ri-arrow-down-s-line side-menu__angle"></i>
+        </a>
+        <ul class="slide-menu" role="menu">
+            <li class="slide">
+                <a href="{{ path('rc_actions_publier') }}" class="side-menu__item {{ route == 'rc_actions_publier' ? 'active' : '' }}" role="menuitem">Publier résultats</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_actions_ipconfig') }}" class="side-menu__item {{ route == 'rc_actions_ipconfig' ? 'active' : '' }}" role="menuitem">Ipconfig</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_actions_update_dossards') }}" class="side-menu__item {{ route == 'rc_actions_update_dossards' ? 'active' : '' }}" role="menuitem">Update dossards</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_actions_backup_dag') }}" class="side-menu__item {{ route == 'rc_actions_backup_dag' ? 'active' : '' }}" role="menuitem">Backup DAG</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_actions_mails') }}" class="side-menu__item {{ route == 'rc_actions_mails' ? 'active' : '' }}" role="menuitem">Mails résultats</a>
+            </li>
+        </ul>
+    </li>
+
+    {# Phase 7 — Tablettes #}
+    <li class="slide {{ route starts with 'rc_tablettes_' ? 'open' : '' }}">
+        <a href="#!" class="side-menu__item" role="menuitem">
+            <span class="side_menu_icon"><i class="ri-tablet-line"></i></span>
+            <span class="side-menu__label">7. Tablettes</span>
+            <i class="ri-arrow-down-s-line side-menu__angle"></i>
+        </a>
+        <ul class="slide-menu" role="menu">
+            <li class="slide">
+                <a href="{{ path('rc_tablettes_reset') }}" class="side-menu__item {{ route == 'rc_tablettes_reset' ? 'active' : '' }}" role="menuitem">Reset tablettes</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_tablettes_annonce') }}" class="side-menu__item {{ route == 'rc_tablettes_annonce' ? 'active' : '' }}" role="menuitem">Annonce coureur</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_tablettes_formulaire') }}" class="side-menu__item {{ route == 'rc_tablettes_formulaire' ? 'active' : '' }}" role="menuitem">Formulaire annonce</a>
+            </li>
+        </ul>
+    </li>
+</ul>

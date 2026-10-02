@@ -1,11 +1,10 @@
-# Enable stateless CSRF protection for forms and logins/logouts
+# Protection CSRF des formulaires et de la connexion
+# CSRF de session classique pour le formulaire de login
+# (le CSRF cookie « stateless » est plutôt pour les flux SPA / en-têtes).
 framework:
     form:
         csrf_protection:
             token_id: submit
 
     csrf_protection:
-        stateless_token_ids:
-            - submit
-            - authenticate
-            - logout
+        enabled: true

@@ -1,0 +1,31 @@
+{% extends 'partials/layouts/master.html.twig' %}
+
+{# Stub Phase 0 — sous-phase à implémenter plus tard #}
+
+{% block page_title %}{{ titre_page }}{% endblock %}
+{% block head_title %}{{ titre_page }}{% endblock %}
+{% block head_sub_title %}{{ section }}{% endblock %}
+
+{% block page_contents %}
+    <div class="row">
+        <div class="col-xl-8 col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-1">{{ titre_page }}</h5>
+                    <p class="mb-0 card-subtitle fs-13 text-muted">
+                        Sous-phase <strong>{{ sous_phase }}</strong> — section {{ section }}
+                    </p>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning mb-0" role="status">
+                        Placeholder Phase 0. L’écran métier sera livré dans la phase correspondante.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block vendor_scripts %}
+    <script type="module" src="{{ asset('assets/js/app.js') }}"></script>
+{% endblock %}

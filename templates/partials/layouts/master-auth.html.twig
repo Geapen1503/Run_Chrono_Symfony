@@ -1,0 +1,25 @@
+{# Layout auth adapté depuis Herozi Admin (master-auth) #}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    {% block head_meta %}
+        {% include 'partials/title-meta.html.twig' with { title: block('page_title')|default('Connexion') } %}
+    {% endblock %}
+
+    {% block head_css %}
+        {% include 'partials/head-css.html.twig' with { layout: 'auth' } %}
+    {% endblock %}
+
+    {% block head_scripts %}{% endblock %}
+    {% block stylesheets %}{% endblock %}
+</head>
+<body>
+    {% block body %}{% endblock %}
+
+    {% block javascripts %}
+        {% include 'partials/vendor-scripts.html.twig' %}
+    {% endblock %}
+
+    {% block page_scripts %}{% endblock %}
+</body>
+</html>

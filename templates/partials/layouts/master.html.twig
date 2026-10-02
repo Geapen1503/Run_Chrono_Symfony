@@ -1,0 +1,45 @@
+{# Layout admin Herozi horizontal (console /rc) #}
+{% set layout = 'horizontal' %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    {% block head_meta %}
+        {% include 'partials/title-meta.html.twig' with { title: block('page_title')|default('Admin') } %}
+    {% endblock %}
+
+    {% include 'partials/head-css.html.twig' with { layout: layout } %}
+    {% block stylesheets %}{% endblock %}
+</head>
+<body>
+    {% include 'partials/header.html.twig' %}
+    {% include 'partials/sidebar.html.twig' %}
+    {% include 'partials/preloader.html.twig' %}
+
+    <main class="app-wrapper">
+        <div class="app-container">
+            <div class="hstack flex-wrap gap-3 mb-5">
+                <div class="flex-grow-1">
+                    <h4 class="mb-1 fw-semibold">{% block head_title %}{% endblock %}</h4>
+                    <nav aria-label="Fil d'Ariane">
+                        <ol class="breadcrumb breadcrumb-arrow mb-0">
+                            <li class="breadcrumb-item">
+                                <a href="{{ path('rc_home') }}">{% block head_sub_title %}Console live{% endblock %}</a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">
+                                {% block page_title %}{% endblock %}
+                            </li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+
+            {% block page_contents %}{% endblock %}
+
+{% include 'partials/bottom-wrapper.html.twig' %}
+
+{% block javascripts %}
+    {% block vendor_scripts %}{% endblock %}
+    {% block page_scripts %}{% endblock %}
+{% endblock %}
+</body>
+</html>
