@@ -1,0 +1,63 @@
+{% extends 'partials/layouts/master2.html.twig' %}
+
+{% block title %}Apex Radar Chart{% endblock %}
+
+{% block head_title %}Radar Chart{% endblock %}
+{% block head_sub_title %}ApexChat
+{% endblock %}
+
+{% set buttonTitle = 'Share' %}
+{% set modalTarget = 'shareModal' %}
+
+{% block page_contents %}
+  <div class="row g-4">
+    <!-- Basic Radar Chart -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100 mb-0">
+        <div class="card-header">
+          <h6 class="card-title mb-0 fw-semibold">Basic Radar Chart</h6>
+        </div>
+        <div class="card-body px-0">
+          <div id="basic_radar_chart" class="apexcharts-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Radar – Multiple Series Chart -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100 mb-0">
+        <div class="card-header">
+          <h6 class="card-title mb-0 fw-semibold">Radar - Multiple Series Chart</h6>
+        </div>
+        <div class="card-body px-0">
+          <div id="radar_multiple_series_chart" class="apexcharts-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Radar with Polygon-fill Chart -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100 mb-0">
+        <div class="card-header">
+          <h6 class="card-title mb-0 fw-semibold">Radar with Polygon-fill Chart</h6>
+        </div>
+        <div class="card-body px-0">
+          <div id="radar_with_polygon_fill_chart" class="apexcharts-container apexcharts-white"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+{% endblock %}
+
+{% block vendor_scripts %}
+  <!-- ApexChat js -->
+  <script src="assets/libs/apexcharts/apexcharts.min.js"></script>
+
+  <!-- ApexChat Radar init -->
+  <script src="assets/js/charts/apexcharts-config.init.js"></script>
+  <script src="assets/js/charts/apexcharts-radar.init.js"></script>
+
+  <!-- App js -->
+  <script type="module" src="assets/js/app.js"></script>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'partials/layouts/master2.html.twig' %}
+
+{% block title %}Apex Mixed Chart{% endblock %}
+
+{% block head_title %}Mixed Charts{% endblock %}
+{% block head_sub_title %}ApexChat
+{% endblock %}
+
+{% set buttonTitle = 'Share' %}
+{% set modalTarget = 'shareModal' %}
+
+{% block page_contents %}
+
+  <div class="row g-4">
+    <!-- Line Column Charts -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100 mb-0">
+        <div class="card-header">
+          <h6 class="card-title mb-0 fw-semibold">Line Column Chart</h6>
+        </div>
+        <div class="card-body">
+          <div id="line_column_chart" class="apexcharts-container apexcharts-white"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Multiple Y-Axis Charts -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100 mb-0">
+        <div class="card-header">
+          <h6 class="card-title mb-0 fw-semibold">Multiple Y-Axis Chart</h6>
+        </div>
+        <div class="card-body">
+          <div id="multiple_y_axis_chart" class="apexcharts-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Line & Area Charts -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100 mb-0">
+        <div class="card-header">
+          <h6 class="card-title mb-0 fw-semibold">Line & Area Chart</h6>
+        </div>
+        <div class="card-body">
+          <div id="line_axis_chart" class="apexcharts-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Line Column Area Charts -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100 mb-0">
+        <div class="card-header">
+          <h6 class="card-title mb-0 fw-semibold">Line Column Area Chart</h6>
+        </div>
+        <div class="card-body">
+          <div id="line_column_area_chart" class="apexcharts-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Line Scatter Charts -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100 mb-0">
+        <div class="card-header">
+          <h6 class="card-title mb-0 fw-semibold">Line Scatter Chart</h6>
+        </div>
+        <div class="card-body">
+          <div id="line_scatter_chart" class="apexcharts-container"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+{% endblock %}
+
+{% block vendor_scripts %}
+  <!-- ApexChat js -->
+  <script src="assets/libs/apexcharts/apexcharts.min.js"></script>
+
+  <!-- ApexChat Mixed init -->
+  <script src="assets/js/charts/apexcharts-config.init.js"></script>
+  <script src="assets/js/charts/apexcharts-mixed.init.js"></script>
+
+  <!-- App js -->
+  <script type="module" src="assets/js/app.js"></script>
+{% endblock %}
