@@ -15,6 +15,19 @@
 ###< phpunit/phpunit ###
 
 ###> symfony/asset-mapper ###
-/public/assets/
+# /public/assets/ est le thème Herozi (à versionner et livrer).
+# Ne pas ignorer ce dossier.
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+###> runchrono agent local (NOT published to GitHub) ###
+/memory-bank/
+/AGENTS.md
+/.cursorrules
+/.cursor/
+###< runchrono agent local ###
+
+###> local tooling ###
+/composer.phar
+/composer-setup.php
+###< local tooling ###

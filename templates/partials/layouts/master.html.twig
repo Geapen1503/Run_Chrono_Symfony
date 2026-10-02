@@ -1,74 +1,45 @@
-{# templates/partials/layouts/master.html.twig #}
+{# Layout admin Herozi horizontal (console /rc) #}
+{% set layout = 'horizontal' %}
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="fr">
 <head>
-    <title>{% block title %}{% endblock %} | Herozi - Bootstrap Admin & Dashboard Template by SRBThemes</title>
-    {% include 'partials/title-meta.html.twig' %}
-    {% include 'partials/datatable-css.html.twig' %}
-    {% include 'partials/head-css.html.twig' with {'layout': layout|default(null)} %}
+    {% block head_meta %}
+        {% include 'partials/title-meta.html.twig' with { title: block('page_title')|default('Admin') } %}
+    {% endblock %}
+
+    {% include 'partials/head-css.html.twig' with { layout: layout } %}
     {% block stylesheets %}{% endblock %}
 </head>
-
 <body>
-    <!-- Begin page -->
     {% include 'partials/header.html.twig' %}
     {% include 'partials/sidebar.html.twig' %}
     {% include 'partials/preloader.html.twig' %}
 
     <main class="app-wrapper">
         <div class="app-container">
-
-            {# Start page title #}
             <div class="hstack flex-wrap gap-3 mb-5">
                 <div class="flex-grow-1">
-                    <h4 class="mb-1 fw-semibold">
-                        {% block head_title %}{% endblock %}
-                    </h4>
-                    <nav>
+                    <h4 class="mb-1 fw-semibold">{% block head_title %}{% endblock %}</h4>
+                    <nav aria-label="Fil d'Ariane">
                         <ol class="breadcrumb breadcrumb-arrow mb-0">
                             <li class="breadcrumb-item">
-                                <a href="index">
-                                    {% block head_sub_title %}{% endblock %}
-                                </a>
+                                <a href="{{ path('rc_home') }}">{% block head_sub_title %}Console live{% endblock %}</a>
                             </li>
                             <li class="breadcrumb-item active" aria-current="page">
-                                {{ block('title') }}
+                                {% block page_title %}{% endblock %}
                             </li>
                         </ol>
                     </nav>
                 </div>
-
-                <div class="d-flex my-xl-auto align-items-center flex-wrap flex-shrink-0">
-                    {% if modalTarget is defined and modalTarget %}
-                        <a href="javascript:void(0)" class="btn btn-sm btn-light-primary" 
-                           data-bs-toggle="modal" data-bs-target="#{{ modalTarget }}">
-                            {{ buttonTitle|default('Action') }}
-                        </a>
-                    {% elseif buttonTitle is defined %}
-                        <a href="{{ link is defined ? link : '#' }}" class="btn btn-sm btn-light-primary">
-                            {{ buttonTitle }}
-                        </a>
-                    {% endif %}
-                </div>
             </div>
-            {# End page title #}
 
-            {% block page_contents %}
-                <!-- Default content, replace or extend as needed -->
-                <p>Success</p>
-            {% endblock %}
+            {% block page_contents %}{% endblock %}
 
-        </div>
-    </main>
+{% include 'partials/bottom-wrapper.html.twig' %}
 
-    {% include 'partials/bottom-wrapper.html.twig' %}
-    {% include 'partials/datatable-script.html.twig' %}
-
-    {% block javascripts %}
-        {% block vendor_scripts %}{% endblock %}
-        {% block page_scripts %}{% endblock %}
-    {% endblock %}
-
+{% block javascripts %}
+    {% block vendor_scripts %}{% endblock %}
+    {% block page_scripts %}{% endblock %}
+{% endblock %}
 </body>
 </html>
