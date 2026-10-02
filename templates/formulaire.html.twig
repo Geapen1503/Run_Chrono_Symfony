@@ -1,0 +1,254 @@
+<div class="card">
+    <!-- En-tête -->
+    <div class="card-header">
+        <h5 class="mb-0">Informations personnelles</h5>
+    </div>
+
+    <div class="card-body">
+        <form>
+
+            <div class="row g-4">
+
+                <!-- Nom -->
+                <div class="col-md-6">
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="nom"
+                        name="nom"
+                        placeholder="Nom"
+                    >
+                </div>
+
+                <!-- Genre -->
+                <div class="col-md-6">
+                    <div class="form-control d-flex align-items-center gap-4"
+                         style="height: 48px;">
+
+                        <span class="text-muted">Genre :</span>
+
+                        <div class="form-check mb-0">
+                            <input
+                                class="form-check-input"
+                                type="radio"
+                                name="genre"
+                                id="homme"
+                                value="Homme"
+                            >
+                            <label class="form-check-label" for="homme">
+                                Homme
+                            </label>
+                        </div>
+
+                        <div class="form-check mb-0">
+                            <input
+                                class="form-check-input"
+                                type="radio"
+                                name="genre"
+                                id="femme"
+                                value="Femme"
+                            >
+                            <label class="form-check-label" for="femme">
+                                Femme
+                            </label>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Téléphone -->
+                <div class="col-md-6">
+                    <input
+                        type="tel"
+                        class="form-control"
+                        id="telephone"
+                        name="telephone"
+                        placeholder="Téléphone"
+                    >
+                </div>
+
+                <!-- Email -->
+                <div class="col-md-6">
+                    <input
+                        type="email"
+                        class="form-control"
+                        id="email"
+                        name="email"
+                        placeholder="Adresse e-mail"
+                    >
+                </div>
+
+                <!-- Date de naissance -->
+                <div class="col-md-6">
+                    <input
+                        type="date"
+                        class="form-control"
+                        id="date-naissance"
+                        name="date_naissance"
+                    >
+                </div>
+
+                <!-- Interrupteur -->
+                <div class="col-md-6">
+                    <div class="form-control d-flex align-items-center justify-content-between"
+                         style="height: 48px;">
+
+                        <span>Interrupteur</span>
+
+                        <div class="form-check form-switch mb-0">
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                role="switch"
+                                id="interrupteur"
+                                name="interrupteur"
+                            >
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Téléchargement -->
+                <div class="col-md-6">
+                    <input
+                        class="form-control"
+                        type="file"
+                        id="fichier"
+                        name="fichier"
+                    >
+                </div>
+
+                <!-- Taille -->
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="taille"
+                            name="taille"
+                            placeholder="Taille"
+                            min="0"
+                            step="1"
+                        >
+                        <span class="input-group-text">cm</span>
+                    </div>
+                </div>
+
+                <!-- Poids -->
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="poids"
+                            name="poids"
+                            placeholder="Poids"
+                            min="0"
+                            step="0.1"
+                        >
+                        <span class="input-group-text">kg</span>
+                    </div>
+                </div>
+
+                <!-- Nationalité -->
+                <div class="col-md-6">
+                    <select
+                        class="form-select"
+                        id="nationalite"
+                        name="nationalite"
+                    >
+                        <option value="" selected>
+                            Sélectionnez votre nationalité
+                        </option>
+                        <option value="francaise">Française</option>
+                        <option value="belge">Belge</option>
+                        <option value="suisse">Suisse</option>
+                        <option value="luxembourgeoise">Luxembourgeoise</option>
+                        <option value="autre">Autre</option>
+                    </select>
+                </div>
+
+                <!-- Catégorie -->
+                <div class="col-md-6">
+                    <select
+                        class="form-select"
+                        id="categorie"
+                        name="categorie"
+                    >
+                        <option value="" selected>
+                            Sélectionnez votre catégorie
+                        </option>
+                        <option value="MI">MI</option>
+                        <option value="CA">CA</option>
+                        <option value="JU">JU</option>
+                        <option value="ES">ES</option>
+                        <option value="SE">SE</option>
+                        <option value="VE">VE</option>
+                        <option value="V1">V1</option>
+                        <option value="V2">V2</option>
+                        <option value="V3">V3</option>
+                        <option value="V4">V4</option>
+                        <option value="V5">V5</option>
+                    </select>
+                </div>
+
+                <!-- Licence -->
+                <div class="col-md-6">
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="licence"
+                        name="licence"
+                        placeholder="Licence / passe J'aime courir"
+                    >
+                </div>
+
+                <!-- Champ libre -->
+                <div class="col-12">
+                    <textarea
+                        class="form-control"
+                        id="commentaire"
+                        name="commentaire"
+                        rows="4"
+                        placeholder="Informations complémentaires"
+                    ></textarea>
+                </div>
+
+            </div>
+
+            <!-- Conditions -->
+            <div class="form-check mt-4">
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="conditions"
+                    name="conditions"
+                >
+
+                <label class="form-check-label" for="conditions">
+                    J'accepte les conditions d'utilisation
+                </label>
+            </div>
+
+            <!-- Boutons -->
+            <div class="d-flex gap-2 mt-4">
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Enregistrer
+                </button>
+
+                <button
+                    type="reset"
+                    class="btn btn-light"
+                >
+                    Réinitialiser
+                </button>
+
+            </div>
+
+        </form>
+    </div>
+</div>
