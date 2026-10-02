@@ -1,0 +1,72 @@
+/* Debut Page Resultats */
+
+.page-resultats-wrapper {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: #f4f4f4;
+    font-size: 15px;
+    color: #333;
+    padding-bottom: 40px;
+    min-height: 100vh;
+}
+
+.page-resultats-wrapper .container {
+    width: 80%;
+    margin: 20px auto 25px auto;
+    background: #fff;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+
+.page-resultats-wrapper .container:hover {
+    transform: translateY(-3px);
+}
+
+.page-resultats-wrapper .course-header {
+    background: linear-gradient(90deg, #00cc00, #01D758);
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: 700;
+}
+
+.page-resultats-wrapper .course-buttons a {
+    text-decoration: none;
+    padding: 9px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9em;
+    text-align: center;
+    min-width: 105px;
+    transition: all 0.25s ease;
+    color: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.12);
+    display: inline-block;
+}
+
+.page-resultats-wrapper .course-buttons a:hover {
+    transform: scale(1.07);
+}
+
+/* ===== Couleurs boutons ===== */
+.page-resultats-wrapper .btn-red { background-color: #FC5D5D; }
+.page-resultats-wrapper .btn-red:hover { background-color: #d94c4c; }
+
+.page-resultats-wrapper .btn-green { background-color: #01D758; }
+.page-resultats-wrapper .btn-green:hover { background-color: #00b94a; }
+
+.page-resultats-wrapper .btn-blue { background-color: #007BFF; }
+.page-resultats-wrapper .btn-blue:hover { background-color: #0056b3; }
+
+.page-resultats-wrapper .btn-gris { background-color: #CECECE; color: #333; }
+.page-resultats-wrapper .btn-gris:hover { background-color: #a8a8a8; }
+
+.page-resultats-wrapper .btn-givre { background-color: #9683EC; }
+.page-resultats-wrapper .btn-givre:hover { background-color: #7c6bd6; }
+
+.page-resultats-wrapper .btn-jaune { background-color: #FFD600; color: #333; }
+.page-resultats-wrapper .btn-jaune:hover { background-color: #e6c200; }
+
+/* Fin Page Resultats */
