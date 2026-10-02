@@ -1,0 +1,34 @@
+   {# Start page title #}
+            <div class="hstack flex-wrap gap-3 mb-5">
+                <div class="flex-grow-1">
+                    <h4 class="mb-1 fw-semibold">
+                        {% block head_title %}{% endblock %}
+                    </h4>
+                    <nav>
+                        <ol class="breadcrumb breadcrumb-arrow mb-0">
+                            <li class="breadcrumb-item">
+                                <a href="index">
+                                    {% block head_sub_title %}{% endblock %}
+                                </a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page">
+                                {% block title %}{% endblock %}
+                            </li>
+                        </ol>
+                    </nav>
+                </div>
+
+                <div class="d-flex my-xl-auto align-items-center flex-wrap flex-shrink-0">
+                    {% if modalTarget is defined and modalTarget %}
+                        <a href="javascript:void(0)" class="btn btn-sm btn-light-primary" 
+                           data-bs-toggle="modal" data-bs-target="#{{ modalTarget }}">
+                            {{ buttonTitle|default('Action') }}
+                        </a>
+                    {% elseif buttonTitle is defined %}
+                        <a href="{{ link is defined ? link : '#' }}" class="btn btn-sm btn-light-primary">
+                            {{ buttonTitle }}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            {# End page title #}

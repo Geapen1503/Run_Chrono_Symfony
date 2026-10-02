@@ -1,0 +1,51 @@
+{% extends 'partials/layouts/master2.html.twig' %}
+
+{% block title %}Apex Funnel Chart{% endblock %}
+
+{% block head_title %}Funnel Charts{% endblock %}
+{% block head_sub_title %}ApexChat
+{% endblock %}
+
+{% set buttonTitle = 'Share' %}
+{% set modalTarget = 'shareModal' %}
+
+{% block page_contents %}
+  <div class="row g-4">
+    <!-- Recruitment Funnel Chart -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100 mb-0">
+        <div class="card-header">
+          <h6 class="card-title mb-0 fw-semibold">Recruitment Funnel Chart</h6>
+        </div>
+        <div class="card-body px-0">
+          <div id="recruitment_funnel_chart" class="apexcharts-container apexcharts-white"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pyramid Funnel Chart -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100 mb-0">
+        <div class="card-header">
+          <h6 class="card-title mb-0 fw-semibold">Pyramid Funnel Chart</h6>
+        </div>
+        <div class="card-body px-0">
+          <div id="pyramid_funnel_chart" class="apexcharts-container apexcharts-white"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+{% endblock %}
+
+{% block vendor_scripts %}
+  <!-- ApexChat js -->
+  <script src="assets/libs/apexcharts/apexcharts.min.js"></script>
+
+  <!-- ApexChat Funnel init -->
+  <script src="assets/js/charts/apexcharts-config.init.js"></script>
+  <script src="assets/js/charts/apexcharts-funnel.init.js"></script>
+
+  <!-- App js -->
+  <script type="module" src="assets/js/app.js"></script>
+{% endblock %}

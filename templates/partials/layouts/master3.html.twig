@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		{% include 'partials/title-meta.html.twig' %}
+		{% include 'partials/head-css.html.twig' with {'layout': layout|default(null)} %}
+		{% block stylesheets %}{% endblock %}
+
+	</head>
+
+	<body>
+
+
+		<!-- Begin page -->
+		{% include 'partials/header.html.twig' %}
+		{% include 'partials/sidebar.html.twig' %}
+		{% include 'partials/preloader.html.twig' %}
+
+		<main class="app-wrapper">
+			<div class="app-container">
+
+				{# start page title #}
+				<div class="hstack flex-wrap gap-3 mb-5">
+					<div class="flex-grow-1">
+						<h4 class="mb-1 fw-semibold"> {% block head_title %}{% endblock %}
+							</h4>
+							<nav>
+								<ol class="breadcrumb breadcrumb-arrow mb-0">
+									<li class="breadcrumb-item">
+										<a href="index"> {% block head_sub_title %}{% endblock %}
+											</a>
+										</li>
+										<li class="breadcrumb-item active" aria-current="page"> {% block title %}{% endblock %}
+											</li>
+										</ol>
+									</nav>
+								</div>
+
+								<div class="d-flex my-xl-auto align-items-center flex-wrap flex-shrink-0">
+									{% if modalTarget is defined and modalTarget %}
+										<a href="javascript:void(0)" class="btn btn-sm btn-light-primary" data-bs-toggle="modal" data-bs-target="#{{ modalTarget }}">
+											{{ buttonTitle }}
+										</a>
+									{% else %}
+										<a href="{{ link is defined ? link : '#' }}" class="btn btn-sm btn-light-primary">
+											{{ buttonTitle }}
+										</a>
+									{% endif %}
+								</div>
+							</div>
+							{# end page title #}
+
+							{% block page_contents %}
+								<!-- Default content, replace or extend as needed -->
+								<p>Success</p>
+							{% endblock %}
+							
+							{% include 'partials/bottom-wrapper.html.twig' %}
+
+							{% block javascripts %}
+								{% block vendor_scripts %}{% endblock %}
+								{% block page_scripts %}{% endblock %}
+							{% endblock %}
+						</body>
+					</html>				
