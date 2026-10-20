@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -69,10 +70,31 @@ class RcController extends AbstractController
 
     // --- Phase 3 — Résultats ---
 
+    /**
+     * Affiche la page des classements web / résultats.
+     * Migré depuis ResultatsController — récupère les événements récents
+     * et prépare les données des courses avec leur statut de résultats.
+     */
     #[Route('/resultats/classements', name: 'rc_resultats_classements', methods: ['GET'])]
-    public function resultatsClassements(): Response
+    public function resultatsClassements(Connection $db): Response
     {
-        return $this->placeholder('Classements web', '3.1', 'Résultats');
+        $dateDebut = '2025-12-01';
+        $dateFin = date('Y-m-d');
+
+        $sql = "SELECT * FROM param_inscription_manuelle
+                WHERE date_evenement BETWEEN :debut AND :fin
+                ORDER BY date_evenement DESC";
+
+        $evenements = $db->fetchAllAssociative($sql, [
+            'debut' => $dateDebut,
+            'fin' => $dateFin,
+        ]);
+
+        $evenementsFormates = $this->preparerEvenements($evenements, $db);
+
+        return $this->render('rc/resultats_classements.html.twig', [
+            'evenements' => $evenementsFormates,
+        ]);
     }
 
     #[Route('/resultats/podiums', name: 'rc_resultats_podiums', methods: ['GET'])]
@@ -189,5 +211,41 @@ class RcController extends AbstractController
             'sous_phase' => $sousPhase,
             'section' => $section,
         ]);
+    }
+
+    /**
+     * Nettoie et restructure les données des événements.
+     * Transforme les 6 colonnes "nom_course_X" en un seul tableau propre,
+     * et vérifie pour chaque course si des résultats sont disponibles.
+     */
+    private function preparerEvenements(array $evenements, Connection $db): array
+    {
+        $couleurs = ['success', 'info', 'danger', 'success', 'info', 'danger'];
+        $resultat = [];
+
+        foreach ($evenements as $event) {
+            $courses = [];
+
+            for ($i = 1; $i <= 6; $i++) {
+                $nomCourse = $event["nom_course_$i"] ?? null;
+
+                if (!empty($nomCourse)) {
+                    $nbArrivants = $db->fetchOne(
+                        "SELECT COUNT(*) FROM {$event['table_dag']} WHERE nom_course = :nom",
+                        ['nom' => $nomCourse]
+                    );
+
+                    $courses[] = [
+                        'nom' => $nomCourse,
+                        'couleur' => $couleurs[$i - 1],
+                        'a_des_resultats' => $nbArrivants > 0,
+                    ];
+                }
+            }
+            $event['courses_nettoyees'] = $courses;
+            $resultat[] = $event;
+        }
+
+        return $resultat;
     }
 }
