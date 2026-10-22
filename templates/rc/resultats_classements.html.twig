@@ -1,0 +1,118 @@
+{% extends 'partials/layouts/master.html.twig' %}
+
+{% block page_title %}Classements web{% endblock %}
+{% block head_title %}Classements web{% endblock %}
+{% block head_sub_title %}Résultats{% endblock %}
+
+{% block page_contents %}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'error' ? 'danger' : label }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {% if evenements is empty %}
+        <div class="row">
+            <div class="col-xl-8 col-lg-10">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="alert alert-info mb-0" role="status">
+                            <i class="ri-information-line me-1"></i>
+                            Aucun événement trouvé pour la période en cours.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="row">
+            {% for event in evenements %}
+                <div class="col-xl-6 col-lg-6 col-md-12 mb-4">
+                    <div class="card overflow-hidden">
+                        <div class="card-header bg-success text-white d-flex align-items-center justify-content-between gap-3" id="{{ event.id_html|default('event-' ~ loop.index) }}">
+                            <div class="d-flex align-items-center gap-3">
+                                {% if event.arg_2 is defined and event.arg_2 %}
+                                    <img src="/load_images/{{ event.arg_2 }}"
+                                         alt="{{ event.arg_2 }}"
+                                         class="rounded"
+                                         style="width: 60px; height: 60px; object-fit: contain; background: rgba(255,255,255,0.15); padding: 4px;">
+                                {% else %}
+                                    <div class="rounded d-flex align-items-center justify-content-center"
+                                         style="width: 60px; height: 60px; background: rgba(255,255,255,0.15);">
+                                        <i class="ri-trophy-line fs-24"></i>
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <h5 class="card-title text-white mb-1">{{ event.evenement }}</h5>
+                                    <p class="mb-0 text-white-50 fs-13">
+                                        <i class="ri-calendar-line me-1"></i>{{ event.lib_date_evenement }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <a class="btn btn-sm btn-light text-success fw-semibold text-nowrap"
+                               href="{{ path('rc_resultats_top_evenement', {idHtml: event.id_html}) }}"
+                               title="Voir le Top 3 de l'événement">
+                                <i class="ri-trophy-line me-1"></i>Top 3
+                            </a>
+                        </div>
+
+                        <div class="card-body">
+                            {% if event.courses_nettoyees is empty %}
+                                <p class="text-muted mb-0">Aucune course configurée.</p>
+                            {% else %}
+                                <div class="d-flex flex-column gap-3">
+                                    {% for course in event.courses_nettoyees %}
+                                        <div class="d-flex flex-wrap align-items-center gap-2 pb-3 {{ not loop.last ? 'border-bottom' : '' }}">
+                                            <span class="badge bg-{{ course.couleur }}-subtle text-{{ course.couleur }} fw-semibold fs-13 px-3 py-2">
+                                                <i class="ri-run-line me-1"></i>{{ course.nom }}
+                                            </span>
+
+                                            {% if course.a_des_resultats %}
+                                                <a class="btn btn-sm btn-{{ course.couleur }}"
+                                                   href="{{ path('rc_resultats_classement_course', {idHtml: event.id_html, nomCourse: course.nom}) }}">
+                                                    <i class="ri-bar-chart-box-line me-1"></i>Classement
+                                                </a>
+                                                <a class="btn btn-sm btn-outline-{{ course.couleur }}"
+                                                   href="{{ path('rc_resultats_podium_course', {idHtml: event.id_html, nomCourse: course.nom}) }}">
+                                                    <i class="ri-medal-line me-1"></i>Podium
+                                                </a>
+                                            {% else %}
+                                                <span class="badge bg-light text-muted fw-normal fs-12 px-3 py-2">
+                                                    <i class="ri-time-line me-1"></i>Attente des résultats
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if (event.arg_1 is defined and event.arg_1) or (event.custom_resultat is defined and event.custom_resultat) %}
+                            <div class="card-footer bg-light">
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% if event.arg_1 is defined and event.arg_1 %}
+                                        <a class="btn btn-sm btn-danger" href="{{ event.arg_1 }}" target="_blank">
+                                            <i class="ri-external-link-line me-1"></i>Plateforme Inscription
+                                        </a>
+                                    {% endif %}
+                                    {% if event.custom_resultat is defined and event.custom_resultat %}
+                                        <div class="mt-2 w-100">{{ event.custom_resultat|raw }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block vendor_scripts %}
+    <script type="module" src="{{ asset('assets/js/app.js') }}"></script>
+{% endblock %}
