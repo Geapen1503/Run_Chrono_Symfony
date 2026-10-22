@@ -1,0 +1,119 @@
+{% extends 'partials/layouts/master.html.twig' %}
+
+{% block page_title %}Top {{ top }} — {{ evenement.evenement }}{% endblock %}
+{% block head_title %}Top {{ top }}{% endblock %}
+{% block head_sub_title %}{{ evenement.evenement }}{% endblock %}
+
+{% block page_contents %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm overflow-hidden">
+                <div class="card-body bg-light-subtle p-4">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge bg-success fs-13 px-3 py-2">
+                                    <i class="ri-trophy-line me-1"></i>Top {{ top }} Scratch
+                                </span>
+                            </div>
+                            <h4 class="mb-1 text-dark fw-bold">{{ evenement.evenement }}</h4>
+                            <p class="text-muted mb-0 fs-13">
+                                <i class="ri-calendar-line me-1"></i>{{ evenement.lib_date_evenement }}
+                            </p>
+                        </div>
+
+                        <div>
+                            <a href="{{ path('rc_resultats_classements') }}" class="btn btn-outline-secondary">
+                                <i class="ri-arrow-left-line me-1"></i>Retour aux événements
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if courses is empty %}
+        <div class="alert alert-info">
+            Aucun résultat disponible pour cet événement.
+        </div>
+    {% else %}
+        <div class="row g-4">
+            {% for item in courses %}
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-primary-subtle d-flex flex-wrap align-items-center justify-content-between gap-2 py-3">
+                            <h5 class="card-title text-primary mb-0 d-flex align-items-center gap-2">
+                                <i class="ri-run-line"></i> {{ item.nom_course }}
+                            </h5>
+                            <div class="d-flex gap-2">
+                                <a href="{{ path('rc_resultats_classement_course', {idHtml: evenement.id_html, nomCourse: item.nom_course}) }}" class="btn btn-sm btn-primary">
+                                    Classement complet
+                                </a>
+                                <a href="{{ path('rc_resultats_podium_course', {idHtml: evenement.id_html, nomCourse: item.nom_course}) }}" class="btn btn-sm btn-outline-warning text-dark">
+                                    Podium complet
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-4">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <h6 class="text-info fw-bold mb-3 d-flex align-items-center gap-1">
+                                        <i class="ri-men-line"></i> Hommes
+                                    </h6>
+                                    {% if item.podium.scratch_hommes is empty %}
+                                        <p class="text-muted fs-13">Aucun arrivant</p>
+                                    {% else %}
+                                        <div class="d-flex flex-column gap-2">
+                                            {% for runner in item.podium.scratch_hommes|slice(0, top) %}
+                                                <div class="d-flex align-items-center justify-content-between p-2 rounded border bg-light-subtle">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <span class="badge bg-warning text-dark">{{ loop.index }}</span>
+                                                        <span class="fw-semibold fs-13">{{ runner.nom_prenom|raw }}</span>
+                                                        <span class="badge bg-light text-muted border fs-11">#{{ runner.dossard }}</span>
+                                                    </div>
+                                                    <span class="font-monospace fw-bold text-success fs-13">
+                                                        {{ runner.chrono_php|default(runner.chrono_mysql) }}
+                                                    </span>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <h6 class="text-danger fw-bold mb-3 d-flex align-items-center gap-1">
+                                        <i class="ri-women-line"></i> Femmes
+                                    </h6>
+                                    {% if item.podium.scratch_femmes is empty %}
+                                        <p class="text-muted fs-13">Aucune arrivante</p>
+                                    {% else %}
+                                        <div class="d-flex flex-column gap-2">
+                                            {% for runner in item.podium.scratch_femmes|slice(0, top) %}
+                                                <div class="d-flex align-items-center justify-content-between p-2 rounded border bg-light-subtle">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <span class="badge bg-warning text-dark">{{ loop.index }}</span>
+                                                        <span class="fw-semibold fs-13">{{ runner.nom_prenom|raw }}</span>
+                                                        <span class="badge bg-light text-muted border fs-11">#{{ runner.dossard }}</span>
+                                                    </div>
+                                                    <span class="font-monospace fw-bold text-success fs-13">
+                                                        {{ runner.chrono_php|default(runner.chrono_mysql) }}
+                                                    </span>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block vendor_scripts %}
+    <script type="module" src="{{ asset('assets/js/app.js') }}"></script>
+{% endblock %}

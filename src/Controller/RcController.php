@@ -2,8 +2,10 @@
 
 namespace App\Controller;
 
+use App\Service\ResultatsService;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -68,45 +70,113 @@ class RcController extends AbstractController
         return $this->placeholder('RGPD — Anonymisation', '2.5', 'Participants');
     }
 
-    // --- Phase 3 — Résultats ---
+    // --- Phase 3 : Resultats ---
 
-    /**
-     * Affiche la page des classements web / résultats.
-     * Migré depuis ResultatsController — récupère les événements récents
-     * et prépare les données des courses avec leur statut de résultats.
-     */
     #[Route('/resultats/classements', name: 'rc_resultats_classements', methods: ['GET'])]
-    public function resultatsClassements(Connection $db): Response
+    public function resultatsClassements(Request $request, ResultatsService $resultatsService): Response
     {
-        $dateDebut = '2025-12-01';
-        $dateFin = date('Y-m-d');
+        $dateDebut = $request->query->get('debut', '2025-01-01');
+        $dateFin = $request->query->get('fin', '2026-12-31');
 
-        $sql = "SELECT * FROM param_inscription_manuelle
-                WHERE date_evenement BETWEEN :debut AND :fin
-                ORDER BY date_evenement DESC";
-
-        $evenements = $db->fetchAllAssociative($sql, [
-            'debut' => $dateDebut,
-            'fin' => $dateFin,
-        ]);
-
-        $evenementsFormates = $this->preparerEvenements($evenements, $db);
+        $evenementsFormates = $resultatsService->getEvenements($dateDebut, $dateFin);
 
         return $this->render('rc/resultats_classements.html.twig', [
             'evenements' => $evenementsFormates,
+            'date_debut' => $dateDebut,
+            'date_fin' => $dateFin,
         ]);
     }
 
-    #[Route('/resultats/podiums', name: 'rc_resultats_podiums', methods: ['GET'])]
-    public function resultatsPodiums(): Response
+    #[Route('/resultats/classement/{idHtml}/{nomCourse}', name: 'rc_resultats_classement_course', methods: ['GET'])]
+    public function classementCourse(
+        string $idHtml,
+        string $nomCourse,
+        Request $request,
+        ResultatsService $resultatsService
+    ): Response {
+        $club = $request->query->get('club');
+        $data = $resultatsService->getClassementCourse($idHtml, $nomCourse, $club);
+
+        if (!$data) {
+            $this->addFlash('error', "Impossible de charger le classement pour cette course ou la table de résultats n'existe pas.");
+            return $this->redirectToRoute('rc_resultats_classements');
+        }
+
+        return $this->render('rc/classement_course.html.twig', $data);
+    }
+
+    #[Route('/resultats/podium/{idHtml}/{nomCourse}', name: 'rc_resultats_podium_course', methods: ['GET'])]
+    public function podiumCourse(
+        string $idHtml,
+        string $nomCourse,
+        ResultatsService $resultatsService
+    ): Response {
+        $data = $resultatsService->getPodiumCourse($idHtml, $nomCourse);
+
+        if (!$data) {
+            $this->addFlash('error', "Impossible de charger le podium pour cette course ou la table de résultats n'existe pas.");
+            return $this->redirectToRoute('rc_resultats_classements');
+        }
+
+        return $this->render('rc/podium_course.html.twig', $data);
+    }
+
+    #[Route('/resultats/top/{idHtml}', name: 'rc_resultats_top_evenement', methods: ['GET'])]
+    public function topEvenement(
+        string $idHtml,
+        Request $request,
+        ResultatsService $resultatsService
+    ): Response {
+        $top = (int)$request->query->get('n', 3);
+        if ($top < 1 || $top > 20) {
+            $top = 3;
+        }
+
+        $data = $resultatsService->getTopEvenement($idHtml, $top);
+
+        if (!$data) {
+            $this->addFlash('error', "Impossible de charger le Top pour cet événement.");
+            return $this->redirectToRoute('rc_resultats_classements');
+        }
+
+        return $this->render('rc/top_evenement.html.twig', $data);
+    }
+
+    #[Route('/resultats/special/{slug}', name: 'rc_resultats_special', methods: ['GET'])]
+    public function resultatsSpecial(string $slug, ResultatsService $resultatsService): Response
     {
-        return $this->placeholder('Podiums', '3.2', 'Résultats');
+        $data = $resultatsService->getSpecialResultat($slug);
+        if (!$data) {
+            $this->addFlash('error', "Impossible de charger les résultats spécifiques demandés.");
+            return $this->redirectToRoute('rc_resultats_classements');
+        }
+
+        return $this->render('rc/resultats_special.html.twig', $data);
+    }
+
+    #[Route('/resultats/courses/{path}', name: 'rc_resultats_courses_legacy', requirements: ['path' => '.*'], methods: ['GET'])]
+    #[Route('/courses/{path}', name: 'rc_courses_legacy', requirements: ['path' => '.*'], methods: ['GET'])]
+    public function coursesLegacy(string $path, ResultatsService $resultatsService): Response
+    {
+        $data = $resultatsService->getSpecialResultat($path);
+        if (!$data) {
+            $this->addFlash('error', "Résultat introuvable.");
+            return $this->redirectToRoute('rc_resultats_classements');
+        }
+
+        return $this->render('rc/resultats_special.html.twig', $data);
+    }
+
+    #[Route('/resultats/podiums', name: 'rc_resultats_podiums', methods: ['GET'])]
+    public function resultatsPodiums(Request $request, ResultatsService $resultatsService): Response
+    {
+        return $this->resultatsClassements($request, $resultatsService);
     }
 
     #[Route('/resultats/top', name: 'rc_resultats_top', methods: ['GET'])]
-    public function resultatsTop(): Response
+    public function resultatsTop(Request $request, ResultatsService $resultatsService): Response
     {
-        return $this->placeholder('Classement TOP N', '3.3', 'Résultats');
+        return $this->resultatsClassements($request, $resultatsService);
     }
 
     // --- Phase 4 — Ajout / modif ---
@@ -211,41 +281,5 @@ class RcController extends AbstractController
             'sous_phase' => $sousPhase,
             'section' => $section,
         ]);
-    }
-
-    /**
-     * Nettoie et restructure les données des événements.
-     * Transforme les 6 colonnes "nom_course_X" en un seul tableau propre,
-     * et vérifie pour chaque course si des résultats sont disponibles.
-     */
-    private function preparerEvenements(array $evenements, Connection $db): array
-    {
-        $couleurs = ['success', 'info', 'danger', 'success', 'info', 'danger'];
-        $resultat = [];
-
-        foreach ($evenements as $event) {
-            $courses = [];
-
-            for ($i = 1; $i <= 6; $i++) {
-                $nomCourse = $event["nom_course_$i"] ?? null;
-
-                if (!empty($nomCourse)) {
-                    $nbArrivants = $db->fetchOne(
-                        "SELECT COUNT(*) FROM {$event['table_dag']} WHERE nom_course = :nom",
-                        ['nom' => $nomCourse]
-                    );
-
-                    $courses[] = [
-                        'nom' => $nomCourse,
-                        'couleur' => $couleurs[$i - 1],
-                        'a_des_resultats' => $nbArrivants > 0,
-                    ];
-                }
-            }
-            $event['courses_nettoyees'] = $courses;
-            $resultat[] = $event;
-        }
-
-        return $resultat;
     }
 }
