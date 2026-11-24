@@ -59,11 +59,14 @@
                 <a href="{{ path('rc_resultats_classements') }}" class="side-menu__item {{ route == 'rc_resultats_classements' ? 'active' : '' }}" role="menuitem">Classements web</a>
             </li>
             <li class="slide">
-                <a href="{{ path('rc_resultats_podiums') }}" class="side-menu__item {{ route == 'rc_resultats_podiums' ? 'active' : '' }}" role="menuitem">Podiums</a>
+                <a href="{{ path('rc_resultats_annees_precedentes') }}" class="side-menu__item {{ route in ['rc_resultats_annees_precedentes', 'rc_resultats_annee'] ? 'active' : '' }}" role="menuitem">Années précédentes</a>
             </li>
-            <li class="slide">
-                <a href="{{ path('rc_resultats_top') }}" class="side-menu__item {{ route == 'rc_resultats_top' ? 'active' : '' }}" role="menuitem">Classement TOP N</a>
-            </li>
+{#            <li class="slide">#}
+{#                <a href="{{ path('rc_resultats_podiums') }}" class="side-menu__item {{ route == 'rc_resultats_podiums' ? 'active' : '' }}" role="menuitem">Podiums</a>#}
+{#            </li>#}
+{#            <li class="slide">#}
+{#                <a href="{{ path('rc_resultats_top') }}" class="side-menu__item {{ route == 'rc_resultats_top' ? 'active' : '' }}" role="menuitem">Classement TOP N</a>#}
+{#            </li>#}
         </ul>
     </li>
 

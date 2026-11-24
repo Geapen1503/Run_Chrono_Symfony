@@ -87,6 +87,39 @@ class RcController extends AbstractController
         ]);
     }
 
+    #[Route('/resultats/annees-precedentes', name: 'rc_resultats_annees_precedentes', methods: ['GET'])]
+    public function resultatsAnneesPrecedentes(Request $request, ResultatsService $resultatsService): Response
+    {
+        $annees = $resultatsService->getAnneesDisponibles();
+        $recherche = $request->query->get('q');
+        $evenementsTrouves = null;
+
+        if ($recherche !== null && trim($recherche) !== '') {
+            $evenementsTrouves = $resultatsService->searchEvenements($recherche);
+        }
+
+        return $this->render('rc/annees_precedentes.html.twig', [
+            'annees' => $annees,
+            'recherche' => $recherche,
+            'evenements' => $evenementsTrouves,
+        ]);
+    }
+
+    #[Route('/resultats/annees-precedentes/{annee<\d{4}>}', name: 'rc_resultats_annee', methods: ['GET'])]
+    public function resultatsAnnee(int $annee, Request $request, ResultatsService $resultatsService): Response
+    {
+        $annees = $resultatsService->getAnneesDisponibles();
+        $recherche = $request->query->get('q');
+        $evenements = $resultatsService->getEvenementsParAnnee($annee, $recherche);
+
+        return $this->render('rc/resultats_annee.html.twig', [
+            'annee' => $annee,
+            'annees' => $annees,
+            'evenements' => $evenements,
+            'recherche' => $recherche,
+        ]);
+    }
+
     #[Route('/resultats/classement/{idHtml}/{nomCourse}', name: 'rc_resultats_classement_course', methods: ['GET'])]
     public function classementCourse(
         string $idHtml,
@@ -168,15 +201,15 @@ class RcController extends AbstractController
     }
 
     #[Route('/resultats/podiums', name: 'rc_resultats_podiums', methods: ['GET'])]
-    public function resultatsPodiums(Request $request, ResultatsService $resultatsService): Response
+    public function resultatsPodiums(): Response
     {
-        return $this->resultatsClassements($request, $resultatsService);
+        return $this->placeholder('Podiums', '3.2', 'Résultats');
     }
 
     #[Route('/resultats/top', name: 'rc_resultats_top', methods: ['GET'])]
-    public function resultatsTop(Request $request, ResultatsService $resultatsService): Response
+    public function resultatsTop(): Response
     {
-        return $this->resultatsClassements($request, $resultatsService);
+        return $this->placeholder('Classement TOP N', '3.3', 'Résultats');
     }
 
     // --- Phase 4 — Ajout / modif ---

@@ -70,6 +70,94 @@ class ResultatsService
             'fin' => $dateFin,
         ]);
 
+        return $this->formaterEvenements($evenements);
+    }
+
+    /**
+     * Récupère la liste des années disponibles en base de données avec le nombre d'événements.
+     *
+     * @return array<int, array{annee: int, nb_evenements: int}>
+     */
+    public function getAnneesDisponibles(): array
+    {
+        $sql = "SELECT DISTINCT YEAR(date_evenement) AS annee, COUNT(*) as nb_evenements
+                FROM param_inscription_manuelle
+                WHERE date_evenement IS NOT NULL 
+                  AND YEAR(date_evenement) >= 2000
+                GROUP BY annee
+                ORDER BY annee DESC";
+
+        $rows = $this->db->fetchAllAssociative($sql);
+
+        return array_map(static function (array $row): array {
+            return [
+                'annee' => (int) $row['annee'],
+                'nb_evenements' => (int) $row['nb_evenements'],
+            ];
+        }, $rows);
+    }
+
+    /**
+     * Récupère tous les événements d'une année donnée, avec filtre optionnel par mot-clé.
+     */
+    public function getEvenementsParAnnee(int $annee, ?string $recherche = null): array
+    {
+        $params = ['annee' => $annee];
+        $where = "WHERE YEAR(date_evenement) = :annee";
+
+        if ($recherche !== null && trim($recherche) !== '') {
+            $where .= " AND (
+                evenement LIKE :query 
+                OR id_html LIKE :query 
+                OR nom_course_1 LIKE :query 
+                OR nom_course_2 LIKE :query 
+                OR nom_course_3 LIKE :query 
+                OR nom_course_4 LIKE :query 
+                OR nom_course_5 LIKE :query 
+                OR nom_course_6 LIKE :query
+            )";
+            $params['query'] = '%' . trim($recherche) . '%';
+        }
+
+        $sql = "SELECT * FROM param_inscription_manuelle
+                {$where}
+                ORDER BY date_evenement DESC";
+
+        $evenements = $this->db->fetchAllAssociative($sql, $params);
+
+        return $this->formaterEvenements($evenements);
+    }
+
+    /**
+     * Recherche des événements sur toutes les années confondues.
+     */
+    public function searchEvenements(string $recherche): array
+    {
+        $params = ['query' => '%' . trim($recherche) . '%'];
+        $sql = "SELECT * FROM param_inscription_manuelle
+                WHERE YEAR(date_evenement) >= 2000
+                  AND (
+                    evenement LIKE :query 
+                    OR id_html LIKE :query 
+                    OR nom_course_1 LIKE :query 
+                    OR nom_course_2 LIKE :query 
+                    OR nom_course_3 LIKE :query 
+                    OR nom_course_4 LIKE :query 
+                    OR nom_course_5 LIKE :query 
+                    OR nom_course_6 LIKE :query
+                  )
+                ORDER BY date_evenement DESC";
+
+        $evenements = $this->db->fetchAllAssociative($sql, $params);
+
+        return $this->formaterEvenements($evenements);
+    }
+
+    /**
+     * Structure et enrichit les données des événements (courses nettoyées, arrivants, etc.).
+     */
+    private function formaterEvenements(array $evenements): array
+    {
         $couleurs = ['success', 'info', 'danger', 'primary', 'warning', 'secondary'];
         $resultat = [];
 

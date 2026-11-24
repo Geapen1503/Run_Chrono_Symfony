@@ -1,0 +1,144 @@
+{% extends 'partials/layouts/master.html.twig' %}
+
+{% block page_title %}Recherche des années précédentes{% endblock %}
+{% block head_title %}Années précédentes{% endblock %}
+{% block head_sub_title %}Résultats{% endblock %}
+
+{% block page_contents %}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'error' ? 'danger' : label }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {# Bandeau d'accueil & Recherche directe #}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card overflow-hidden border-0 shadow-sm" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);">
+                <div class="card-body p-4 text-white">
+                    <div class="row align-items-center g-3">
+                        <div class="col-lg-7">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                     style="width: 58px; height: 58px; background: rgba(255, 255, 255, 0.2);">
+                                    <i class="ri-archive-line fs-28"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-white fw-bold mb-1">Archives des résultats — Éditions précédentes</h4>
+                                    <p class="text-white-50 mb-0 fs-14">
+                                        Sélectionnez une année ci-dessous pour consulter l'ensemble des courses, classements et podiums, ou effectuez une recherche globale.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-5">
+                            <form method="get" action="{{ path('rc_resultats_annees_precedentes') }}" class="d-flex gap-2">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-0 text-muted">
+                                        <i class="ri-search-line"></i>
+                                    </span>
+                                    <input type="text"
+                                           name="q"
+                                           class="form-control border-0"
+                                           placeholder="Rechercher une course ou un événement..."
+                                           value="{{ recherche|default('') }}">
+                                    <button class="btn btn-warning fw-semibold px-3" type="submit">
+                                        Chercher
+                                    </button>
+                                </div>
+                                {% if recherche %}
+                                    <a href="{{ path('rc_resultats_annees_precedentes') }}"
+                                       class="btn btn-light"
+                                       title="Effacer la recherche">
+                                        <i class="ri-close-line"></i>
+                                    </a>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Grille des années disponibles #}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="ri-calendar-2-line text-primary me-2"></i>Saisons disponibles en base de données
+                </h5>
+                <span class="badge bg-primary-subtle text-primary fs-12 px-2 py-1">
+                    {{ annees|length }} années enregistrées
+                </span>
+            </div>
+        </div>
+
+        {% if annees is empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="ri-information-line me-1"></i>Aucune archive d'événement n'a été trouvée en base de données.
+                </div>
+            </div>
+        {% else %}
+            {% for item in annees %}
+                <div class="col-xxl-2 col-xl-3 col-lg-4 col-md-6 col-sm-6 mb-3">
+                    <div class="card h-100 border shadow-sm transition-all hover-shadow">
+                        <div class="card-body text-center p-4 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="avatar-lg bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center text-primary">
+                                    <i class="ri-trophy-line fs-32"></i>
+                                </div>
+                                <h3 class="fw-bold mb-1 text-dark">{{ item.annee }}</h3>
+                                <p class="text-muted fs-13 mb-3">
+                                    <i class="ri-flag-line me-1"></i>{{ item.nb_evenements }} événement{{ item.nb_evenements > 1 ? 's' : '' }}
+                                </p>
+                            </div>
+                            <a href="{{ path('rc_resultats_annee', {annee: item.annee}) }}"
+                               class="btn btn-primary w-100 fw-semibold">
+                                <i class="ri-eye-line me-1"></i>Consulter {{ item.annee }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    {# Résultats de recherche globale (si un terme a été recherché) #}
+    {% if recherche is not null and recherche != '' %}
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border">
+                    <div class="card-header bg-light d-flex align-items-center justify-content-between">
+                        <h5 class="card-title mb-0 fs-16">
+                            <i class="ri-search-eye-line me-2 text-primary"></i>
+                            Résultats pour la recherche : <strong class="text-primary">« {{ recherche }} »</strong>
+                        </h5>
+                        <span class="badge bg-secondary-subtle text-secondary fs-13">
+                            {{ evenements|length }} événement{{ evenements|length > 1 ? 's' : '' }} trouvé{{ evenements|length > 1 ? 's' : '' }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        {% if evenements is empty %}
+                            <div class="alert alert-warning mb-0" role="alert">
+                                <i class="ri-alert-line me-1"></i>
+                                Aucun événement ne correspond à votre recherche <strong>« {{ recherche }} »</strong>.
+                            </div>
+                        {% else %}
+                            {% include 'rc/_event_cards.html.twig' with {evenements: evenements} %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+{% endblock %}
+
+{% block vendor_scripts %}
+    <script type="module" src="{{ asset('assets/js/app.js') }}"></script>
+{% endblock %}
