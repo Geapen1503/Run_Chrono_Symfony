@@ -1,0 +1,240 @@
+{% extends 'partials/layouts/master.html.twig' %}
+
+{% block page_title %}Événement actif{% endblock %}
+{% block head_title %}Événement actif{% endblock %}
+{% block head_sub_title %}Participants{% endblock %}
+
+{% block page_contents %}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'error' ? 'danger' : label }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {# ===== ÉVÉNEMENT ACTUELLEMENT ACTIF ===== #}
+    <div class="row mb-4">
+        <div class="col-12">
+            {% if evenement_actif %}
+                <div class="card border-0 shadow-sm overflow-hidden">
+                    <div class="card-body p-4">
+                        <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+                            <div>
+                                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                    <span class="badge bg-success-subtle text-success fs-12 px-3 py-2">
+                                        <i class="ri-broadcast-line me-1"></i>Événement actif dans /rc
+                                    </span>
+                                    <span class="badge bg-primary-subtle text-primary fs-12 px-2 py-2">
+                                        <i class="ri-database-2-line me-1"></i>{{ evenement_actif.table_run }}
+                                    </span>
+                                    {% if evenement_actif.table_dag %}
+                                        <span class="badge bg-secondary-subtle text-secondary fs-12 px-2 py-2">
+                                            {{ evenement_actif.table_dag }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                <h4 class="fw-bold mb-1">{{ evenement_actif.evenement }}</h4>
+                                <p class="text-muted mb-3 fs-13">
+                                    <i class="ri-calendar-line me-1"></i>{{ evenement_actif.lib_date_evenement ?: evenement_actif.date_evenement }}
+                                    <span class="mx-2">•</span>
+                                    <code>{{ evenement_actif.id_html }}</code>
+                                </p>
+
+                                {% if evenement_actif.courses_actives is not empty %}
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for course in evenement_actif.courses_actives %}
+                                            <span class="badge bg-light text-dark border fs-12 px-2 py-1">
+                                                <i class="ri-run-line me-1 text-primary"></i>{{ course.nom }}
+                                                {% if course.heure_depart and course.heure_depart != '00:00:00' %}
+                                                    <span class="text-muted ms-1">({{ course.heure_depart|slice(0, 5) }})</span>
+                                                {% endif %}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <a href="{{ path('rc_participants_liste') }}" class="btn btn-primary">
+                                    <i class="ri-file-list-3-line me-1"></i>Voir la liste complète
+                                </a>
+                                <form method="post" action="{{ path('rc_evenement_actif_definir') }}" class="m-0">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('rc_active_event') }}">
+                                    <input type="hidden" name="_redirect" value="{{ path('rc_participants_evenement_actif') }}">
+                                    <input type="hidden" name="id_html" value="">
+                                    <button type="submit" class="btn btn-outline-danger" id="btnDesactiverEvenement">
+                                        <i class="ri-close-circle-line me-1"></i>Désactiver
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar-md rounded-circle bg-warning-subtle text-warning d-flex align-items-center justify-content-center flex-shrink-0">
+                                <i class="ri-calendar-close-line fs-24"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-1">Il n'y a pas d'événement actuellement.</h5>
+                                <p class="text-muted mb-0 fs-13">
+                                    Sélectionnez un événement ci-dessous pour l'activer dans toute la console live.
+                                </p>
+                            </div>
+                        </div>
+                        <a href="{{ path('rc_participants_liste') }}" class="btn btn-outline-secondary">
+                            <i class="ri-file-list-3-line me-1"></i>Liste complète
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ===== SÉLECTEUR D'ÉVÉNEMENT ===== #}
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <h5 class="card-title mb-1">
+                            <i class="ri-swap-line text-primary me-2"></i>Choisir l'événement actif
+                        </h5>
+                        <p class="text-muted mb-0 fs-12">
+                            <span class="js-events-visible-count">{{ evenements|length }}</span> événement{{ evenements|length > 1 ? 's' : '' }} disponible{{ evenements|length > 1 ? 's' : '' }}
+                        </p>
+                    </div>
+
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <div class="form-check form-switch mb-0">
+                            <input class="form-check-input" type="checkbox" id="filterTableRunOnly">
+                            <label class="form-check-label fs-13" for="filterTableRunOnly">Tables <code>run_*</code> existantes uniquement</label>
+                        </div>
+
+                        <div class="input-group input-group-sm" style="width: 280px;">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="ri-search-line text-muted"></i>
+                            </span>
+                            <input type="text"
+                                   id="evenementActifSearch"
+                                   class="form-control border-start-0"
+                                   placeholder="Rechercher un événement, date, table...">
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post" action="{{ path('rc_evenement_actif_definir') }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('rc_active_event') }}">
+                    <input type="hidden" name="_redirect" value="{{ path('rc_participants_evenement_actif') }}">
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" id="evenementsActifsTable">
+                            <thead class="table-light">
+                                <tr class="fs-12 text-muted text-uppercase">
+                                    <th style="width: 120px;">Date</th>
+                                    <th>Événement</th>
+                                    <th>Table inscriptions</th>
+                                    <th style="width: 120px;" class="text-center">Catégories</th>
+                                    <th style="width: 170px;" class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for evt in evenements %}
+                                    {% set estActif = evenement_actif and evenement_actif.id_html == evt.id_html %}
+                                    <tr class="{{ estActif ? 'table-success' : '' }}"
+                                        data-search="{{ (evt.evenement ~ ' ' ~ evt.date_evenement ~ ' ' ~ evt.id_html ~ ' ' ~ evt.table_run)|lower }}"
+                                        data-has-table="{{ evt.table_run_existe ? '1' : '0' }}">
+                                        <td class="font-monospace fs-12 text-nowrap">{{ evt.date_evenement }}</td>
+                                        <td>
+                                            <div class="fw-semibold">{{ evt.evenement }}</div>
+                                            <small class="text-muted fs-11">{{ evt.id_html }}</small>
+                                        </td>
+                                        <td>
+                                            {% if evt.table_run_existe %}
+                                                <span class="badge bg-success-subtle text-success font-monospace fs-11">
+                                                    <i class="ri-database-2-line me-1"></i>{{ evt.table_run }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-light text-muted border font-monospace fs-11" title="Table absente en base locale">
+                                                    {{ evt.table_run ?: 'Non définie' }} (absente)
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-secondary-subtle text-secondary fs-11">
+                                                {{ evt.categorie_ffa ?: 'ffa_2020' }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            {% if estActif %}
+                                                <span class="badge bg-success px-3 py-2">
+                                                    <i class="ri-broadcast-line me-1"></i>Actif
+                                                </span>
+                                            {% else %}
+                                                <button type="submit"
+                                                        name="id_html"
+                                                        value="{{ evt.id_html }}"
+                                                        class="btn btn-sm btn-outline-primary">
+                                                    <i class="ri-pushpin-line me-1"></i>Définir actif
+                                                </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            Aucun événement trouvé dans <code>param_inscription_manuelle</code>.
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block vendor_scripts %}
+    <script type="module" src="{{ asset('assets/js/app.js') }}"></script>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('evenementActifSearch');
+    const tableRunToggle = document.getElementById('filterTableRunOnly');
+    const table = document.getElementById('evenementsActifsTable');
+    const countLabel = document.querySelector('.js-events-visible-count');
+    if (!table) return;
+
+    function filtrerEvenements() {
+        const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        const onlyWithTable = tableRunToggle ? tableRunToggle.checked : false;
+        const rows = table.querySelectorAll('tbody tr[data-search]');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const matchText = (row.dataset.search || '').includes(query);
+            const matchTable = !onlyWithTable || row.dataset.hasTable === '1';
+            const visible = matchText && matchTable;
+            row.style.display = visible ? '' : 'none';
+            if (visible) visibleCount++;
+        });
+
+        if (countLabel) {
+            countLabel.textContent = visibleCount;
+        }
+    }
+
+    if (searchInput) searchInput.addEventListener('input', filtrerEvenements);
+    if (tableRunToggle) tableRunToggle.addEventListener('change', filtrerEvenements);
+});
+</script>
+{% endblock %}

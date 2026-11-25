@@ -1,4 +1,5 @@
 {# Partial réutilisable pour afficher la grille des événements et leurs courses #}
+{% set evenementActifCourant = rc_evenement_actif() %}
 <div class="row" id="eventsContainer">
     {% for event in evenements %}
         <div class="col-xl-6 col-lg-6 col-md-12 mb-4 event-card"
@@ -27,11 +28,26 @@
                         </div>
                     </div>
 
-                    <a class="btn btn-sm btn-light text-success fw-semibold text-nowrap"
-                       href="{{ path('rc_resultats_top_evenement', {idHtml: event.id_html}) }}"
-                       title="Voir le Top 3 de l'événement">
-                        <i class="ri-trophy-line me-1"></i>Top 3
-                    </a>
+                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                        {% set estEvenementActif = evenementActifCourant and evenementActifCourant.id_html == event.id_html %}
+                        <form method="post" action="{{ path('rc_evenement_actif_definir') }}" class="m-0">
+                            <input type="hidden" name="_token" value="{{ csrf_token('rc_active_event') }}">
+                            <input type="hidden" name="_redirect" value="{{ app.request.requestUri }}">
+                            <input type="hidden" name="id_html" value="{{ event.id_html }}">
+                            <button type="submit"
+                                    class="btn btn-sm fw-semibold text-nowrap {{ estEvenementActif ? 'btn-warning text-dark' : 'btn-outline-light' }}"
+                                    title="{{ estEvenementActif ? 'Cet événement est actuellement actif' : 'Définir comme événement actif dans /rc' }}"
+                                    {{ estEvenementActif ? 'disabled' : '' }}>
+                                <i class="{{ estEvenementActif ? 'ri-broadcast-line' : 'ri-pushpin-line' }} me-1"></i>{{ estEvenementActif ? 'Actif' : 'Définir actif' }}
+                            </button>
+                        </form>
+
+                        <a class="btn btn-sm btn-light text-success fw-semibold text-nowrap"
+                           href="{{ path('rc_resultats_top_evenement', {idHtml: event.id_html}) }}"
+                           title="Voir le Top 3 de l'événement">
+                            <i class="ri-trophy-line me-1"></i>Top 3
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card-body">

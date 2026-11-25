@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Service\EvenementActifService;
+use App\Service\ParticipantsService;
 use App\Service\ResultatsService;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,6 +26,39 @@ class RcController extends AbstractController
         return $this->redirectToRoute('rc_participants_recherche');
     }
 
+    #[Route('/evenement-actif', name: 'rc_evenement_actif_definir', methods: ['POST'])]
+    public function definirEvenementActif(
+        Request $request,
+        EvenementActifService $evenementActifService,
+    ): Response {
+        if (!$this->isCsrfTokenValid('rc_active_event', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+
+        $idHtml = trim((string) $request->request->get('id_html', ''));
+
+        if ($idHtml === '') {
+            $evenementActifService->definirEvenementActifEnSession('');
+            $this->addFlash('info', 'Aucun événement actif sélectionné.');
+        } else {
+            $event = $evenementActifService->trouverEvenementParId($idHtml);
+            if ($event === null) {
+                $this->addFlash('error', "L'événement sélectionné est introuvable.");
+            } else {
+                $evenementActifService->definirEvenementActifEnSession($idHtml);
+                $this->addFlash('success', 'Événement actif défini : ' . $event['evenement']);
+            }
+        }
+
+        // Protection anti-redirection ouverte : on n'autorise que les chemins internes relatifs
+        $redirect = (string) $request->request->get('_redirect', '');
+        if ($redirect !== '' && str_starts_with($redirect, '/') && !str_starts_with($redirect, '//')) {
+            return $this->redirect($redirect);
+        }
+
+        return $this->redirectToRoute('rc_participants_evenement_actif');
+    }
+
     // --- Phase 1 — Import DAG ---
 
     #[Route('/import/dag', name: 'rc_import_dag', methods: ['GET'])]
@@ -40,6 +75,16 @@ class RcController extends AbstractController
 
     // --- Phase 2 — Participants ---
 
+    #[Route('/participants/evenement-actif', name: 'rc_participants_evenement_actif', methods: ['GET'])]
+    public function participantsEvenementActif(
+        EvenementActifService $evenementActifService,
+    ): Response {
+        return $this->render('rc/evenement_actif.html.twig', [
+            'evenement_actif' => $evenementActifService->getEvenementActif(),
+            'evenements' => $evenementActifService->getEvenementsSelectionnables(),
+        ]);
+    }
+
     #[Route('/participants/recherche', name: 'rc_participants_recherche', methods: ['GET'])]
     public function participantsRecherche(): Response
     {
@@ -47,9 +92,25 @@ class RcController extends AbstractController
     }
 
     #[Route('/participants/liste', name: 'rc_participants_liste', methods: ['GET'])]
-    public function participantsListe(): Response
-    {
-        return $this->placeholder('Liste complète des participants', '2.2', 'Participants');
+    public function participantsListe(
+        EvenementActifService $evenementActifService,
+        ParticipantsService $participantsService,
+    ): Response {
+        $evenement = $evenementActifService->getEvenementActif();
+
+        if ($evenement === null) {
+            return $this->render('rc/participants_liste.html.twig', [
+                'evenement' => null,
+                'donnees' => null,
+                'genere_le' => new \DateTimeImmutable(),
+            ]);
+        }
+
+        return $this->render('rc/participants_liste.html.twig', [
+            'evenement' => $evenement,
+            'donnees' => $participantsService->getListeComplete($evenement),
+            'genere_le' => new \DateTimeImmutable(),
+        ]);
     }
 
     #[Route('/participants/heures-depart', name: 'rc_participants_heures_depart', methods: ['GET'])]
