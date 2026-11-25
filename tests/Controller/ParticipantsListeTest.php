@@ -36,55 +36,56 @@ class ParticipantsListeTest extends WebTestCase
         $this->assertResponseRedirects('/login');
     }
 
-    public function testAdminAfficheListeCompleteEvenementActif(): void
+    public function testParDefautAucunEvenementActifSansSelection(): void
     {
         $client = static::createClient();
         $this->connecterAdmin($client);
 
-        $crawler = $client->request('GET', '/rc/participants/liste');
+        $client->request('GET', '/rc/participants/liste');
 
         $this->assertResponseIsSuccessful();
         $this->assertSelectorNotExists('#rcActiveEventDropdown');
-        $this->assertSelectorTextContains('h4.fw-bold', 'Trail du Cone d or d Avanton 2026 (86)');
+        $this->assertAnySelectorTextContains('h5', "Il n'y a pas d'événement actuellement.");
         $this->assertSelectorExists('a[href="/rc/participants/evenement-actif"]');
-        $this->assertSelectorExists('#section-litiges');
-        $this->assertSelectorTextContains('#section-litiges', '4 litiges');
-        $this->assertCount(3, $crawler->filter('.js-course-section'));
-        $this->assertCount(98, $crawler->filter('.js-participants-table tbody tr[data-ordre-nom]'));
     }
 
-    public function testAdminPeutChangerEtDesactiverEvenementActifDepuisPageDediee(): void
+    public function testAdminSelectionneEvenementPuisConsulteListeComplete(): void
     {
         $client = static::createClient();
         $this->connecterAdmin($client);
 
-        // 1. Accès à la page dédiée « Événement actif »
+        // 1. Page dédiée : aucun événement actif par défaut
         $crawler = $client->request('GET', '/rc/participants/evenement-actif');
         $this->assertResponseIsSuccessful();
-        $this->assertSelectorTextContains('h4.fw-bold', 'Trail du Cone d or d Avanton 2026 (86)');
+        $this->assertAnySelectorTextContains('h5', "Il n'y a pas d'événement actuellement.");
         $this->assertSelectorExists('#evenementsActifsTable tbody tr[data-search]');
 
         $token = $crawler->filter('form[action="/rc/evenement-actif"] input[name="_token"]')->first()->attr('value');
         $this->assertNotEmpty($token);
 
-        // 2. Activation d'un autre événement depuis la page dédiée
+        // 2. Activation d'Avanton via la page dédiée
         $client->request('POST', '/rc/evenement-actif', [
             '_token' => $token,
             '_redirect' => '/rc/participants/evenement-actif',
-            'id_html' => '20261122_Foulees_de_Bonneuil_Matours',
+            'id_html' => '20260919_Trail_Cone_dOr_Avanton',
         ]);
         $this->assertResponseRedirects('/rc/participants/evenement-actif');
 
         $crawler = $client->followRedirect();
         $this->assertResponseIsSuccessful();
-        $this->assertSelectorTextContains('h4.fw-bold', 'Foulees Bonnimatoises 2026 (86)');
+        $this->assertSelectorTextContains('h4.fw-bold', 'Trail du Cone d or d Avanton 2026 (86)');
 
-        // Vérifie que la page Liste complète utilise bien le nouvel événement
-        $client->request('GET', '/rc/participants/liste');
+        // 3. Consultation de la liste complète avec l'événement sélectionné
+        $crawlerListe = $client->request('GET', '/rc/participants/liste');
         $this->assertResponseIsSuccessful();
-        $this->assertSelectorTextContains('h4.fw-bold', 'Foulees Bonnimatoises 2026 (86)');
+        $this->assertSelectorTextContains('h4.fw-bold', 'Trail du Cone d or d Avanton 2026 (86)');
+        $this->assertSelectorExists('a[href="/rc/participants/evenement-actif"]');
+        $this->assertSelectorExists('#section-litiges');
+        $this->assertSelectorTextContains('#section-litiges', '4 litiges');
+        $this->assertCount(3, $crawlerListe->filter('.js-course-section'));
+        $this->assertCount(98, $crawlerListe->filter('.js-participants-table tbody tr[data-ordre-nom]'));
 
-        // 3. Désactivation de l'événement actif depuis la page dédiée
+        // 4. Désactivation depuis la page dédiée -> retour à l'état vide
         $tokenDesactiver = $crawler->filter('#btnDesactiverEvenement')->closest('form')->filter('input[name="_token"]')->attr('value');
         $client->request('POST', '/rc/evenement-actif', [
             '_token' => $tokenDesactiver,
@@ -96,12 +97,6 @@ class ParticipantsListeTest extends WebTestCase
         $client->followRedirect();
         $this->assertResponseIsSuccessful();
         $this->assertAnySelectorTextContains('h5', "Il n'y a pas d'événement actuellement.");
-
-        // Vérifie que la page Liste complète affiche également l'état vide
-        $client->request('GET', '/rc/participants/liste');
-        $this->assertResponseIsSuccessful();
-        $this->assertAnySelectorTextContains('h5', "Il n'y a pas d'événement actuellement.");
-        $this->assertSelectorExists('a[href="/rc/participants/evenement-actif"]');
     }
 
     public function testDefinirEvenementActifRejetteCsrfInvalideEtRedirectionExterne(): void
@@ -126,21 +121,6 @@ class ParticipantsListeTest extends WebTestCase
             'id_html' => '20260919_Trail_Cone_dOr_Avanton',
         ]);
         $this->assertResponseRedirects('/rc/participants/evenement-actif');
-    }
-
-    public function testAdminAfficheMessageSiAucunEvenementActif(): void
-    {
-        $client = static::createClient();
-        $this->connecterAdmin($client);
-
-        /** @var EvenementActifService $evenementActifService */
-        $evenementActifService = static::getContainer()->get(EvenementActifService::class);
-        $evenementActifService->setActiveEventId('');
-
-        $client->request('GET', '/rc/participants/liste');
-
-        $this->assertResponseIsSuccessful();
-        $this->assertAnySelectorTextContains('h5', "Il n'y a pas d'événement actuellement.");
     }
 
     public function testAdminAfficheMessageSiEvenementIntrouvable(): void

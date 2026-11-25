@@ -25,7 +25,7 @@ class EvenementActifService
         private readonly Connection $db,
         private readonly RequestStack $requestStack,
         #[Autowire('%env(default::RUNCHRONO_ACTIVE_EVENT_ID)%')]
-        private string $defaultActiveEventId = '',
+        private ?string $defaultActiveEventId = null,
     ) {
     }
 
@@ -173,7 +173,7 @@ class EvenementActifService
             }
         }
 
-        return trim($this->defaultActiveEventId);
+        return trim((string) $this->defaultActiveEventId);
     }
 
     private function reinitialiserCache(): void
