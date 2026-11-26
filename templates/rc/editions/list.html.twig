@@ -53,7 +53,7 @@
                 </div>
                 <div class="col-md-6 col-lg-7 text-md-end">
                     <span class="text-muted fs-13">
-                        <span class="js-editions-visible-count">{{ editions|length }}</span> / {{ editions|length }} visible(s)
+                        <span class="js-editions-visible-count">{{ editions_total }}</span> / {{ editions_total }} visible(s)
                     </span>
                 </div>
             </div>
@@ -70,14 +70,14 @@
                         <th class="text-end" style="min-width: 11rem;">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                {% for row in editions %}
-                    {% set estActif = active_id_html and active_id_html == row.id_html %}
-                    <tr class="{{ estActif ? 'table-success' : '' }}"
+
+                {% macro edition_row(row, est_actif) %}
+                    <tr class="{{ est_actif ? 'table-success border-success border-2' : '' }}"
+                        {% if est_actif %}data-edition-active="1"{% endif %}
                         data-search="{{ (row.evenement ~ ' ' ~ row.date_evenement ~ ' ' ~ row.id_html ~ ' ' ~ row.table_run ~ ' ' ~ row.table_dag)|lower }}">
                         <td class="text-nowrap">
                             {{ row.date_evenement }}
-                            {% if estActif %}
+                            {% if est_actif %}
                                 <span class="badge bg-success ms-1" title="Événement actif pour /rc et legacy">
                                     <i class="ri-broadcast-line"></i>
                                 </span>
@@ -86,7 +86,7 @@
                         <td><code>{{ row.id_html }}</code></td>
                         <td>
                             <span class="fw-semibold">{{ row.evenement }}</span>
-                            {% if estActif %}
+                            {% if est_actif %}
                                 <span class="badge bg-success-subtle text-success ms-1 fs-11">Actif</span>
                             {% endif %}
                         </td>
@@ -97,7 +97,7 @@
                                 <a href="{{ path('rc_editions_edit', { idHtml: row.id_html }) }}" class="btn btn-sm btn-outline-primary">
                                     Modifier
                                 </a>
-                                {% if estActif %}
+                                {% if est_actif %}
                                     <span class="btn btn-sm btn-success disabled" title="Déjà l'événement actif">
                                         <i class="ri-broadcast-line"></i>
                                     </span>
@@ -114,10 +114,40 @@
                             </div>
                         </td>
                     </tr>
+                {% endmacro %}
+
+                {% import _self as editions %}
+
+                <tbody class="editions-active-block">
+                {% if edition_active %}
+                    {{ editions.edition_row(edition_active, true) }}
+                {% endif %}
+                </tbody>
+
+                {% if edition_active and editions_others is not empty %}
+                    <tbody class="editions-spacer-block" aria-hidden="true">
+                        <tr class="js-editions-spacer">
+                            <td colspan="6" class="border-0 p-0 bg-body">
+                                <div class="px-3 py-3">
+                                    <div class="border-top border-2 border-success-subtle opacity-75"></div>
+                                    <div class="text-center text-muted fs-11 text-uppercase mt-2 mb-0">
+                                        Autres éditions
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                {% endif %}
+
+                <tbody class="editions-catalog-block">
+                {% for row in editions_others %}
+                    {{ editions.edition_row(row, false) }}
                 {% else %}
-                    <tr class="js-editions-empty-row">
-                        <td colspan="6" class="text-muted p-4">Aucune édition (connexion MySQL ou table vide).</td>
-                    </tr>
+                    {% if not edition_active %}
+                        <tr class="js-editions-empty-row">
+                            <td colspan="6" class="text-muted p-4">Aucune édition (connexion MySQL ou table vide).</td>
+                        </tr>
+                    {% endif %}
                 {% endfor %}
                 </tbody>
             </table>
@@ -137,17 +167,37 @@ document.addEventListener('DOMContentLoaded', function () {
     const countLabel = document.querySelector('.js-editions-visible-count');
     if (!table || !searchInput) return;
 
-  function filtrerEditions() {
+    const spacerRow = table.querySelector('tr.js-editions-spacer');
+    const activeRow = table.querySelector('tr[data-edition-active="1"]');
+
+    function filtrerEditions() {
         const query = searchInput.value.toLowerCase().trim();
-        const rows = table.querySelectorAll('tbody tr[data-search]');
+        const rows = table.querySelectorAll('tr[data-search]');
         let visibleCount = 0;
+        let activeVisible = false;
+        let othersVisible = 0;
 
         rows.forEach(function (row) {
             const haystack = row.dataset.search || '';
             const visible = query === '' || haystack.includes(query);
             row.style.display = visible ? '' : 'none';
-            if (visible) visibleCount++;
+            if (visible) {
+                visibleCount++;
+                if (row.dataset.editionActive === '1') {
+                    activeVisible = true;
+                } else {
+                    othersVisible++;
+                }
+            }
         });
+
+        if (spacerRow) {
+            const spacerParent = spacerRow.closest('tbody');
+            const showSpacer = activeVisible && othersVisible > 0;
+            if (spacerParent) {
+                spacerParent.style.display = showSpacer ? '' : 'none';
+            }
+        }
 
         if (countLabel) {
             countLabel.textContent = String(visibleCount);

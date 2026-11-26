@@ -45,10 +45,22 @@ class RcEditionController extends AbstractController
         $actif = $evenementActifService->getEvenementActif();
         $activeIdHtml = $actif !== null ? trim((string) ($actif['id_html'] ?? '')) : '';
 
+        $editionActive = null;
+        $editionsOthers = [];
+        foreach ($editions as $row) {
+            if ($activeIdHtml !== '' && ($row['id_html'] ?? '') === $activeIdHtml) {
+                $editionActive = $row;
+            } else {
+                $editionsOthers[] = $row;
+            }
+        }
+
         return $this->render('rc/editions/list.html.twig', [
-            'editions' => $editions,
+            'edition_active' => $editionActive,
+            'editions_others' => $editionsOthers,
             'db_error' => $dbError,
             'active_id_html' => $activeIdHtml,
+            'editions_total' => \count($editions),
         ]);
     }
 
