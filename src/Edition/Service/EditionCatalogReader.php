@@ -63,6 +63,7 @@ final class EditionCatalogReader
             tableRun: (string) ($row['table_run'] ?? ''),
             tableDag: (string) ($row['table_dag'] ?? ''),
             tableDepartTspreel: (string) ($row['table_depart_tspreel'] ?? ''),
+            // table_inter = catalogue SQL legacy ; table_intermediaire = alias schéma / fichier tableau
             tableIntermediaire: (string) ($row['table_inter'] ?? $row['table_intermediaire'] ?? ''),
             podium: (int) ($row['podium'] ?? 3),
             podiumLimit: (int) ($row['podium_limit'] ?? $row['limit'] ?? 1),
