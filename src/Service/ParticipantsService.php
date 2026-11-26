@@ -9,6 +9,8 @@ use Doctrine\DBAL\Connection;
  */
 class ParticipantsService
 {
+    private const RECHERCHE_MAX_RESULTATS = 150;
+
     private const STATUTS_PPS_MANQUANTS = ['Aucun fichier', 'Date non valide', 'En relecture'];
     private const STATUTS_PPS_NON_CONFORMES = ['Manque une mention', 'Illisible'];
     private const STATUTS_MINEUR_LITIGE = ['Aucun fichier', 'En relecture', 'Manque une mention'];
@@ -158,6 +160,141 @@ class ParticipantsService
         } catch (\Throwable) {
             return false;
         }
+    }
+
+    /**
+     * Recherche coureur(s) dans la table run_* de l'événement actif (legacy info_coureur.php).
+     *
+     * @param array<string, mixed> $evenement
+     *
+     * @return array{
+     *     resultats: list<array<string, mixed>>,
+     *     mode: string,
+     *     limite_atteinte: bool,
+     *     table_run: string
+     * }
+     */
+    public function rechercherCoureurs(
+        array $evenement,
+        string $dossard = '',
+        string $nom = '',
+        string $prenom = '',
+    ): array {
+        $tableRun = trim((string) ($evenement['table_run'] ?? ''));
+        if (!$this->tableExists($tableRun)) {
+            throw new \RuntimeException("La table engagés « {$tableRun} » est introuvable.");
+        }
+
+        $dossard = trim($dossard);
+        $nom = trim($nom);
+        $prenom = trim($prenom);
+
+        if ($dossard === '' && $nom === '' && $prenom === '') {
+            return [
+                'resultats' => [],
+                'mode' => 'vide',
+                'limite_atteinte' => false,
+                'table_run' => $tableRun,
+            ];
+        }
+
+        $colonnes = $this->getColonnesTable($tableRun);
+        $limite = self::RECHERCHE_MAX_RESULTATS + 1;
+
+        // Mode dossard (legacy : champ numérique)
+        if ($dossard !== '' && $nom === '' && $prenom === '') {
+            if (ctype_digit($dossard)) {
+                $sql = "SELECT * FROM `{$tableRun}` WHERE dossard = :dossard ORDER BY CAST(dossard AS UNSIGNED), dossard LIMIT {$limite}";
+                $params = ['dossard' => $dossard];
+                $mode = 'dossard_exact';
+            } else {
+                $params = [
+                    'nom_like' => '%'.$this->echapperLike($dossard).'%',
+                ];
+                $sql = $this->sqlRechercheNom($tableRun, $colonnes, \array_keys($params));
+                $mode = 'texte';
+            }
+        } else {
+            $params = [];
+            if ($nom !== '') {
+                $params['nom_like'] = '%'.$this->echapperLike($nom).'%';
+            }
+            if ($prenom !== '' && \in_array('prenom', $colonnes, true)) {
+                $params['prenom_like'] = '%'.$this->echapperLike($prenom).'%';
+            }
+            if ($dossard !== '') {
+                $params['dossard_like'] = '%'.$this->echapperLike($dossard).'%';
+            }
+            if ($params === []) {
+                return [
+                    'resultats' => [],
+                    'mode' => 'vide',
+                    'limite_atteinte' => false,
+                    'table_run' => $tableRun,
+                ];
+            }
+            $sql = $this->sqlRechercheNom($tableRun, $colonnes, \array_keys($params));
+            $mode = 'nom';
+        }
+
+        $lignes = $this->db->fetchAllAssociative($sql, $params);
+        $limiteAtteinte = \count($lignes) > self::RECHERCHE_MAX_RESULTATS;
+        if ($limiteAtteinte) {
+            $lignes = \array_slice($lignes, 0, self::RECHERCHE_MAX_RESULTATS);
+        }
+
+        $hasPpsSchema = $this->possedeColonnesPps($colonnes);
+        $modeRegroupe = !in_array((string) ($evenement['categorie_ffa'] ?? ''), ['ffa_2020', 'ffa_2020_q'], true);
+
+        $resultats = [];
+        foreach ($lignes as $ligne) {
+            $resultats[] = $this->enrichirParticipant($ligne, $hasPpsSchema, $modeRegroupe);
+        }
+
+        return [
+            'resultats' => $resultats,
+            'mode' => $mode,
+            'limite_atteinte' => $limiteAtteinte,
+            'table_run' => $tableRun,
+        ];
+    }
+
+    /**
+     * @param list<string>        $colonnes
+     * @param list<string>        $paramKeys  Clés des paramètres liés (nom_like, prenom_like, dossard_like)
+     */
+    private function sqlRechercheNom(string $tableRun, array $colonnes, array $paramKeys): string
+    {
+        $conditions = [];
+        if (\in_array('nom_like', $paramKeys, true)) {
+            if (\in_array('nom_prenom', $colonnes, true)) {
+                $conditions[] = 'nom_prenom LIKE :nom_like';
+            }
+            if (\in_array('nom', $colonnes, true)) {
+                $conditions[] = 'nom LIKE :nom_like';
+            }
+        }
+        if (\in_array('prenom_like', $paramKeys, true) && \in_array('prenom', $colonnes, true)) {
+            $conditions[] = 'prenom LIKE :prenom_like';
+        }
+        if (\in_array('dossard_like', $paramKeys, true) && \in_array('dossard', $colonnes, true)) {
+            $conditions[] = 'dossard LIKE :dossard_like';
+        }
+
+        if ($conditions === []) {
+            throw new \RuntimeException('Table run_* sans colonnes exploitables pour la recherche.');
+        }
+
+        $where = implode(' OR ', $conditions);
+        $limite = self::RECHERCHE_MAX_RESULTATS + 1;
+        $order = \in_array('nom_prenom', $colonnes, true) ? 'nom_prenom, dossard' : 'dossard';
+
+        return "SELECT * FROM `{$tableRun}` WHERE ({$where}) ORDER BY {$order} LIMIT {$limite}";
+    }
+
+    private function echapperLike(string $valeur): string
+    {
+        return addcslashes($valeur, '%_\\');
     }
 
     /**

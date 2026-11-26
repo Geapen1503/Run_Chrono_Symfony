@@ -86,9 +86,53 @@ class RcController extends AbstractController
     }
 
     #[Route('/participants/recherche', name: 'rc_participants_recherche', methods: ['GET'])]
-    public function participantsRecherche(): Response
-    {
-        return $this->render('rc/recherche.html.twig');
+    public function participantsRecherche(
+        Request $request,
+        EvenementActifService $evenementActifService,
+        ParticipantsService $participantsService,
+    ): Response {
+        $evenement = $evenementActifService->getEvenementActif();
+
+        $dossard = trim((string) $request->query->get('dossard', ''));
+        $nom = trim((string) $request->query->get('nom', ''));
+        $prenom = trim((string) $request->query->get('prenom', ''));
+        $rechercheUnique = trim((string) $request->query->get('q', ''));
+
+        // Compatibilité legacy : un seul champ (numéro ou texte)
+        if ($rechercheUnique !== '' && $dossard === '' && $nom === '' && $prenom === '') {
+            if (ctype_digit($rechercheUnique)) {
+                $dossard = $rechercheUnique;
+            } else {
+                $nom = $rechercheUnique;
+            }
+        }
+
+        $rechercheEffectuee = $dossard !== '' || $nom !== '' || $prenom !== '';
+        $recherche = null;
+        $erreurRecherche = null;
+
+        if ($rechercheEffectuee) {
+            if ($evenement === null) {
+                $erreurRecherche = 'Aucun événement actif. Choisissez une édition dans « Événement actif ».';
+            } else {
+                try {
+                    $recherche = $participantsService->rechercherCoureurs($evenement, $dossard, $nom, $prenom);
+                } catch (\Throwable $e) {
+                    $erreurRecherche = $e->getMessage();
+                }
+            }
+        }
+
+        return $this->render('rc/recherche.html.twig', [
+            'evenement' => $evenement,
+            'dossard' => $dossard,
+            'nom' => $nom,
+            'prenom' => $prenom,
+            'q' => $rechercheUnique,
+            'recherche_effectuee' => $rechercheEffectuee,
+            'recherche' => $recherche,
+            'erreur_recherche' => $erreurRecherche,
+        ]);
     }
 
     #[Route('/participants/liste', name: 'rc_participants_liste', methods: ['GET'])]

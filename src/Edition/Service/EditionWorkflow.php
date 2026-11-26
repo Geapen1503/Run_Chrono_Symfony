@@ -3,6 +3,7 @@
 namespace App\Edition\Service;
 
 use App\Edition\Model\EditionPayload;
+use App\Service\EvenementActifService;
 
 /**
  * Orchestration enregistrement édition (fichiers + MySQL + activation).
@@ -16,6 +17,7 @@ final class EditionWorkflow
         private ParamInscriptionCatalogSync $catalogSync,
         private ParametreCourseActivator $activator,
         private ActiveEditionStore $activeEditionStore,
+        private EvenementActifService $evenementActifService,
     ) {
     }
 
@@ -53,6 +55,7 @@ final class EditionWorkflow
         if ($payload->setActiveEdition) {
             $this->activator->activate($payload->idHtml());
             $this->activeEditionStore->set($payload->idHtml());
+            $this->evenementActifService->definirEvenementActifEnSession($payload->idHtml());
             $messages[] = 'Édition active (parametre_course.php + contexte /rc).';
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Edition\Service\ActiveEditionStore;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -24,6 +25,7 @@ class EvenementActifService
     public function __construct(
         private readonly Connection $db,
         private readonly RequestStack $requestStack,
+        private readonly ActiveEditionStore $activeEditionStore,
         #[Autowire('%env(default::RUNCHRONO_ACTIVE_EVENT_ID)%')]
         private ?string $defaultActiveEventId = null,
     ) {
@@ -171,6 +173,11 @@ class EvenementActifService
             if ($session->has(self::SESSION_KEY)) {
                 return trim((string) $session->get(self::SESSION_KEY));
             }
+        }
+
+        $depuisFichier = $this->activeEditionStore->get();
+        if ($depuisFichier !== null) {
+            return $depuisFichier;
         }
 
         return trim((string) $this->defaultActiveEventId);
