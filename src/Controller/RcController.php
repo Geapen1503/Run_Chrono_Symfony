@@ -2,7 +2,12 @@
 
 namespace App\Controller;
 
+use App\Service\EvenementActifService;
+use App\Service\ParticipantsService;
+use App\Service\ResultatsService;
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -21,6 +26,39 @@ class RcController extends AbstractController
         return $this->redirectToRoute('rc_participants_recherche');
     }
 
+    #[Route('/evenement-actif', name: 'rc_evenement_actif_definir', methods: ['POST'])]
+    public function definirEvenementActif(
+        Request $request,
+        EvenementActifService $evenementActifService,
+    ): Response {
+        if (!$this->isCsrfTokenValid('rc_active_event', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+
+        $idHtml = trim((string) $request->request->get('id_html', ''));
+
+        if ($idHtml === '') {
+            $evenementActifService->definirEvenementActifEnSession('');
+            $this->addFlash('info', 'Aucun événement actif sélectionné.');
+        } else {
+            $event = $evenementActifService->trouverEvenementParId($idHtml);
+            if ($event === null) {
+                $this->addFlash('error', "L'événement sélectionné est introuvable.");
+            } else {
+                $evenementActifService->definirEvenementActifEnSession($idHtml);
+                $this->addFlash('success', 'Événement actif défini : ' . $event['evenement']);
+            }
+        }
+
+        // Protection anti-redirection ouverte : on n'autorise que les chemins internes relatifs
+        $redirect = (string) $request->request->get('_redirect', '');
+        if ($redirect !== '' && str_starts_with($redirect, '/') && !str_starts_with($redirect, '//')) {
+            return $this->redirect($redirect);
+        }
+
+        return $this->redirectToRoute('rc_participants_evenement_actif');
+    }
+
     // --- Phase 1 — Import DAG ---
 
     #[Route('/import/dag', name: 'rc_import_dag', methods: ['GET'])]
@@ -37,6 +75,16 @@ class RcController extends AbstractController
 
     // --- Phase 2 — Participants ---
 
+    #[Route('/participants/evenement-actif', name: 'rc_participants_evenement_actif', methods: ['GET'])]
+    public function participantsEvenementActif(
+        EvenementActifService $evenementActifService,
+    ): Response {
+        return $this->render('rc/evenement_actif.html.twig', [
+            'evenement_actif' => $evenementActifService->getEvenementActif(),
+            'evenements' => $evenementActifService->getEvenementsSelectionnables(),
+        ]);
+    }
+
     #[Route('/participants/recherche', name: 'rc_participants_recherche', methods: ['GET'])]
     public function participantsRecherche(): Response
     {
@@ -44,9 +92,25 @@ class RcController extends AbstractController
     }
 
     #[Route('/participants/liste', name: 'rc_participants_liste', methods: ['GET'])]
-    public function participantsListe(): Response
-    {
-        return $this->placeholder('Liste complète des participants', '2.2', 'Participants');
+    public function participantsListe(
+        EvenementActifService $evenementActifService,
+        ParticipantsService $participantsService,
+    ): Response {
+        $evenement = $evenementActifService->getEvenementActif();
+
+        if ($evenement === null) {
+            return $this->render('rc/participants_liste.html.twig', [
+                'evenement' => null,
+                'donnees' => null,
+                'genere_le' => new \DateTimeImmutable(),
+            ]);
+        }
+
+        return $this->render('rc/participants_liste.html.twig', [
+            'evenement' => $evenement,
+            'donnees' => $participantsService->getListeComplete($evenement),
+            'genere_le' => new \DateTimeImmutable(),
+        ]);
     }
 
     #[Route('/participants/heures-depart', name: 'rc_participants_heures_depart', methods: ['GET'])]
@@ -67,12 +131,134 @@ class RcController extends AbstractController
         return $this->placeholder('RGPD — Anonymisation', '2.5', 'Participants');
     }
 
-    // --- Phase 3 — Résultats ---
+    // --- Phase 3 : Resultats ---
 
     #[Route('/resultats/classements', name: 'rc_resultats_classements', methods: ['GET'])]
-    public function resultatsClassements(): Response
+    public function resultatsClassements(Request $request, ResultatsService $resultatsService): Response
     {
-        return $this->placeholder('Classements web', '3.1', 'Résultats');
+        $dateDebut = $request->query->get('debut', '2025-01-01');
+        $dateFin = $request->query->get('fin', '2026-12-31');
+
+        $evenementsFormates = $resultatsService->getEvenements($dateDebut, $dateFin);
+
+        return $this->render('rc/resultats_classements.html.twig', [
+            'evenements' => $evenementsFormates,
+            'date_debut' => $dateDebut,
+            'date_fin' => $dateFin,
+        ]);
+    }
+
+    #[Route('/resultats/annees-precedentes', name: 'rc_resultats_annees_precedentes', methods: ['GET'])]
+    public function resultatsAnneesPrecedentes(Request $request, ResultatsService $resultatsService): Response
+    {
+        $annees = $resultatsService->getAnneesDisponibles();
+        $recherche = $request->query->get('q');
+        $evenementsTrouves = null;
+
+        if ($recherche !== null && trim($recherche) !== '') {
+            $evenementsTrouves = $resultatsService->searchEvenements($recherche);
+        }
+
+        return $this->render('rc/annees_precedentes.html.twig', [
+            'annees' => $annees,
+            'recherche' => $recherche,
+            'evenements' => $evenementsTrouves,
+        ]);
+    }
+
+    #[Route('/resultats/annees-precedentes/{annee<\d{4}>}', name: 'rc_resultats_annee', methods: ['GET'])]
+    public function resultatsAnnee(int $annee, Request $request, ResultatsService $resultatsService): Response
+    {
+        $annees = $resultatsService->getAnneesDisponibles();
+        $recherche = $request->query->get('q');
+        $evenements = $resultatsService->getEvenementsParAnnee($annee, $recherche);
+
+        return $this->render('rc/resultats_annee.html.twig', [
+            'annee' => $annee,
+            'annees' => $annees,
+            'evenements' => $evenements,
+            'recherche' => $recherche,
+        ]);
+    }
+
+    #[Route('/resultats/classement/{idHtml}/{nomCourse}', name: 'rc_resultats_classement_course', methods: ['GET'])]
+    public function classementCourse(
+        string $idHtml,
+        string $nomCourse,
+        Request $request,
+        ResultatsService $resultatsService
+    ): Response {
+        $club = $request->query->get('club');
+        $data = $resultatsService->getClassementCourse($idHtml, $nomCourse, $club);
+
+        if (!$data) {
+            $this->addFlash('error', "Impossible de charger le classement pour cette course ou la table de résultats n'existe pas.");
+            return $this->redirectToRoute('rc_resultats_classements');
+        }
+
+        return $this->render('rc/classement_course.html.twig', $data);
+    }
+
+    #[Route('/resultats/podium/{idHtml}/{nomCourse}', name: 'rc_resultats_podium_course', methods: ['GET'])]
+    public function podiumCourse(
+        string $idHtml,
+        string $nomCourse,
+        ResultatsService $resultatsService
+    ): Response {
+        $data = $resultatsService->getPodiumCourse($idHtml, $nomCourse);
+
+        if (!$data) {
+            $this->addFlash('error', "Impossible de charger le podium pour cette course ou la table de résultats n'existe pas.");
+            return $this->redirectToRoute('rc_resultats_classements');
+        }
+
+        return $this->render('rc/podium_course.html.twig', $data);
+    }
+
+    #[Route('/resultats/top/{idHtml}', name: 'rc_resultats_top_evenement', methods: ['GET'])]
+    public function topEvenement(
+        string $idHtml,
+        Request $request,
+        ResultatsService $resultatsService
+    ): Response {
+        $top = (int)$request->query->get('n', 3);
+        if ($top < 1 || $top > 20) {
+            $top = 3;
+        }
+
+        $data = $resultatsService->getTopEvenement($idHtml, $top);
+
+        if (!$data) {
+            $this->addFlash('error', "Impossible de charger le Top pour cet événement.");
+            return $this->redirectToRoute('rc_resultats_classements');
+        }
+
+        return $this->render('rc/top_evenement.html.twig', $data);
+    }
+
+    #[Route('/resultats/special/{slug}', name: 'rc_resultats_special', methods: ['GET'])]
+    public function resultatsSpecial(string $slug, ResultatsService $resultatsService): Response
+    {
+        $data = $resultatsService->getSpecialResultat($slug);
+        if (!$data) {
+            $this->addFlash('error', "Impossible de charger les résultats spécifiques demandés.");
+            return $this->redirectToRoute('rc_resultats_classements');
+        }
+
+        return $this->render('rc/resultats_special.html.twig', $data);
+    }
+
+    #[Route('/resultats/courses/{path}', name: 'rc_resultats_courses_legacy', requirements: ['path' => '.*'], methods: ['GET'])]
+    #[Route('/courses/{path}', name: 'rc_courses_legacy', requirements: ['path' => '.*'], methods: ['GET'])]
+    public function coursesLegacy(string $path, ResultatsService $resultatsService): Response
+    {
+        $data = $resultatsService->getSpecialResultat($path);
+        if (!$data) {
+            $this->addFlash('error', "Résultat introuvable.");
+            return $this->redirectToRoute('rc_resultats_classements');
+        }
+
+        return $this->render('rc/resultats_special.html.twig', $data);
     }
 
     #[Route('/resultats/podiums', name: 'rc_resultats_podiums', methods: ['GET'])]

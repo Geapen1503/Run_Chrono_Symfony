@@ -1,0 +1,859 @@
+{% extends 'partials/layouts/master.html.twig' %}
+
+{% block page_title %}Liste complète des participants{% endblock %}
+{% block head_title %}Liste complète des participants{% endblock %}
+{% block head_sub_title %}Participants{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .participant-femme-nom {
+        color: #d63384;
+    }
+    @media print {
+        .app-header,
+        .app-sidebar,
+        .footer,
+        .breadcrumb,
+        .no-print {
+            display: none !important;
+        }
+        .app-wrapper,
+        .app-container {
+            margin: 0 !important;
+            padding: 0 !important;
+            max-width: 100% !important;
+        }
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #dee2e6 !important;
+            break-inside: avoid-page;
+        }
+        .print-break-before {
+            page-break-before: always;
+            break-before: page;
+        }
+        .collapse:not(.show) {
+            display: block !important;
+        }
+        .table {
+            font-size: 11px !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block page_contents %}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'error' ? 'danger' : label }} alert-dismissible fade show no-print" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {% if evenement is null %}
+        <div class="row">
+            <div class="col-xl-8 col-lg-10">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5 text-center">
+                        <div class="avatar-lg bg-warning-subtle text-warning rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
+                            <i class="ri-calendar-close-line fs-32"></i>
+                        </div>
+                        <h5 class="fw-bold mb-2">Il n'y a pas d'événement actuellement.</h5>
+                        <p class="text-muted mb-4">
+                            Sélectionnez un événement actif depuis la page dédiée ou via les classements / archives.
+                        </p>
+                        <div class="d-flex flex-wrap justify-content-center gap-2">
+                            <a href="{{ path('rc_participants_evenement_actif') }}" class="btn btn-primary">
+                                <i class="ri-broadcast-line me-1"></i>Choisir un événement actif
+                            </a>
+                            <a href="{{ path('rc_resultats_classements') }}" class="btn btn-outline-secondary">
+                                <i class="ri-trophy-line me-1"></i>Classements web
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        {# ===== EN-TÊTE ÉVÉNEMENT & ACTIONS ===== #}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm overflow-hidden">
+                    <div class="card-body p-4">
+                        <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+                            <div>
+                                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                    <span class="badge bg-success-subtle text-success fs-12 px-3 py-2">
+                                        <i class="ri-broadcast-line me-1"></i>Événement actif
+                                    </span>
+                                    <span class="badge bg-primary-subtle text-primary fs-12 px-2 py-2">
+                                        <i class="ri-database-2-line me-1"></i>{{ evenement.table_run }}
+                                    </span>
+                                    <span class="badge bg-secondary-subtle text-secondary fs-12 px-2 py-2">
+                                        Catégories : {{ donnees.mode_categorie_regroupee ? 'Regroupées (2019)' : (evenement.categorie_ffa|default('ffa_2020')|upper) }}
+                                    </span>
+                                </div>
+                                <h4 class="fw-bold mb-1">{{ evenement.evenement }}</h4>
+                                <p class="text-muted mb-0 fs-13">
+                                    <i class="ri-calendar-line me-1"></i>{{ evenement.lib_date_evenement ?: evenement.date_evenement }}
+                                    <span class="mx-2">•</span>
+                                    <i class="ri-time-line me-1"></i>Généré le {{ genere_le|date('d/m/Y à H\\hi') }}
+                                </p>
+                            </div>
+
+                            <div class="d-flex flex-wrap align-items-center gap-2 no-print">
+                                <a href="{{ path('rc_participants_evenement_actif') }}" class="btn btn-outline-primary">
+                                    <i class="ri-swap-line me-1"></i>Changer d'événement
+                                </a>
+                                <a href="{{ path('rc_participants_recherche') }}" class="btn btn-outline-secondary">
+                                    <i class="ri-search-line me-1"></i>Recherche coureur
+                                </a>
+                                <button type="button" class="btn btn-primary" onclick="window.print()">
+                                    <i class="ri-printer-line me-1"></i>Imprimer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if not donnees.table_run_existe %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-warning d-flex align-items-center" role="alert">
+                        <i class="ri-error-warning-line fs-20 me-2"></i>
+                        <div>
+                            La table des inscriptions <code>{{ evenement.table_run }}</code> n'existe pas encore en base de données.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            {# ===== CARTES KPI SYNTHÈSE ===== #}
+            <div class="row g-3 mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="text-muted fs-13 fw-medium">Total inscrits</span>
+                                <span class="avatar-sm rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center">
+                                    <i class="ri-group-line fs-18"></i>
+                                </span>
+                            </div>
+                            <h3 class="fw-bold mb-1">{{ donnees.total_inscrits }}</h3>
+                            <div class="d-flex flex-wrap gap-2 fs-12 text-muted">
+                                <span class="text-danger fw-medium">{{ donnees.totaux.F }} F</span>
+                                <span>•</span>
+                                <span class="text-info fw-medium">{{ donnees.totaux.H }} H</span>
+                                {% if donnees.totaux.X > 0 %}
+                                    <span>•</span>
+                                    <span>{{ donnees.totaux.X }} X</span>
+                                {% endif %}
+                                <span>•</span>
+                                <span>{{ donnees.courses_stats|length }} course{{ donnees.courses_stats|length > 1 ? 's' : '' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="text-muted fs-13 fw-medium">Détection / Arrivants</span>
+                                <span class="avatar-sm rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center">
+                                    <i class="ri-flag-2-line fs-18"></i>
+                                </span>
+                            </div>
+                            {% if donnees.table_dag_existe %}
+                                <h3 class="fw-bold mb-1">{{ donnees.totaux.arrivants }}</h3>
+                                <div class="fs-12 text-muted">
+                                    {% set taux = donnees.total_inscrits > 0 ? ((donnees.totaux.arrivants / donnees.total_inscrits) * 100)|round : 0 %}
+                                    {{ taux }} % des inscrits arrivés
+                                </div>
+                            {% else %}
+                                <h5 class="fw-semibold text-muted mb-1">En attente</h5>
+                                <div class="fs-12 text-muted">Table DAG non créée</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="text-muted fs-13 fw-medium">Litiges PPS / Mineurs</span>
+                                <span class="avatar-sm rounded-circle {{ donnees.litiges|length > 0 ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success' }} d-flex align-items-center justify-content-center">
+                                    <i class="{{ donnees.litiges|length > 0 ? 'ri-alert-line' : 'ri-shield-check-line' }} fs-18"></i>
+                                </span>
+                            </div>
+                            {% if donnees.has_pps_schema %}
+                                <h3 class="fw-bold mb-1 {{ donnees.litiges|length > 0 ? 'text-danger' : 'text-success' }}">
+                                    {{ donnees.litiges|length }}
+                                </h3>
+                                <div class="fs-12 text-muted">
+                                    {{ donnees.litiges|length > 0 ? 'Dossiers à vérifier au retrait' : 'Tous les dossiers sont conformes' }}
+                                </div>
+                            {% else %}
+                                <h5 class="fw-semibold text-muted mb-1">N/A</h5>
+                                <div class="fs-12 text-muted">Colonnes PPS absentes sur cette table</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="text-muted fs-13 fw-medium">Alertes &amp; Abandons</span>
+                                <span class="avatar-sm rounded-circle {{ (donnees.homonymes|length + donnees.doublons_dossards|length + donnees.abandons|length) > 0 ? 'bg-warning-subtle text-warning' : 'bg-secondary-subtle text-secondary' }} d-flex align-items-center justify-content-center">
+                                    <i class="ri-error-warning-line fs-18"></i>
+                                </span>
+                            </div>
+                            <h3 class="fw-bold mb-1">{{ donnees.homonymes|length + donnees.doublons_dossards|length + donnees.abandons|length }}</h3>
+                            <div class="fs-12 text-muted">
+                                {{ donnees.homonymes|length }} homonyme{{ donnees.homonymes|length > 1 ? 's' : '' }}
+                                • {{ donnees.abandons|length }} abandon{{ donnees.abandons|length > 1 ? 's' : '' }}
+                                {% if donnees.rgpd_liste|length > 0 %}
+                                    • {{ donnees.rgpd_liste|length }} RGPD
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ===== SYNTHÈSE PAR COURSE & PLAGES DE DOSSARDS ===== #}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <h5 class="card-title mb-0">
+                                <i class="ri-bar-chart-horizontal-line text-primary me-2"></i>Synthèse par course &amp; dossards sur place
+                            </h5>
+                            <span class="text-muted fs-12">Inscriptions, arrivées et prochain numéro de dossard disponible</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr class="fs-12 text-muted text-uppercase">
+                                        <th>Course</th>
+                                        <th class="text-center">Départ</th>
+                                        <th class="text-center">Inscrits</th>
+                                        <th class="text-center">Répartition F / H</th>
+                                        {% if donnees.has_partants %}
+                                            <th class="text-center">Partants</th>
+                                        {% endif %}
+                                        <th class="text-center">Arrivants</th>
+                                        <th class="text-center">Plage dossards</th>
+                                        <th class="text-center">Prochain dossard (Max + 1)</th>
+                                        {% if donnees.has_pps_schema %}
+                                            <th class="text-center">Litiges</th>
+                                        {% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat in donnees.courses_stats %}
+                                        <tr>
+                                            <td class="fw-semibold">{{ stat.course }}</td>
+                                            <td class="text-center font-monospace fs-12">
+                                                {{ stat.heure_depart ?? '—' }}
+                                            </td>
+                                            <td class="text-center fw-bold">{{ stat.inscrits }}</td>
+                                            <td class="text-center fs-12">
+                                                <span class="badge bg-danger-subtle text-danger">{{ stat.femmes }} F</span>
+                                                <span class="badge bg-info-subtle text-info">{{ stat.hommes }} H</span>
+                                                {% if stat.mixtes > 0 %}
+                                                    <span class="badge bg-secondary-subtle text-secondary">{{ stat.mixtes }} X</span>
+                                                {% endif %}
+                                            </td>
+                                            {% if donnees.has_partants %}
+                                                <td class="text-center">{{ stat.partants }}</td>
+                                            {% endif %}
+                                            <td class="text-center">
+                                                {% if donnees.table_dag_existe %}
+                                                    <span class="fw-semibold text-success">{{ stat.arrivants }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">—</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center font-monospace fs-12">
+                                                {% if stat.min_dossard is not null %}
+                                                    #{{ stat.min_dossard }} – #{{ stat.max_dossard }}
+                                                {% else %}
+                                                    —
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                {% if stat.prochain_dossard is not null %}
+                                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle font-monospace fs-12">
+                                                        #{{ stat.prochain_dossard }}
+                                                    </span>
+                                                {% else %}
+                                                    —
+                                                {% endif %}
+                                            </td>
+                                            {% if donnees.has_pps_schema %}
+                                                <td class="text-center">
+                                                    {% if stat.litiges > 0 %}
+                                                        <span class="badge bg-danger">{{ stat.litiges }}</span>
+                                                    {% else %}
+                                                        <span class="badge bg-success-subtle text-success">0</span>
+                                                    {% endif %}
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="9" class="text-center py-4 text-muted">Aucune course enregistrée.</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                {% if donnees.courses_stats|length > 1 %}
+                                    <tfoot class="table-light fw-bold">
+                                        <tr>
+                                            <td>TOTAL</td>
+                                            <td></td>
+                                            <td class="text-center">{{ donnees.total_inscrits }}</td>
+                                            <td class="text-center fs-12">
+                                                {{ donnees.totaux.F }} F / {{ donnees.totaux.H }} H
+                                                {% if donnees.totaux.X > 0 %} / {{ donnees.totaux.X }} X{% endif %}
+                                            </td>
+                                            {% if donnees.has_partants %}
+                                                <td class="text-center">{{ donnees.totaux.partants }}</td>
+                                            {% endif %}
+                                            <td class="text-center">{{ donnees.table_dag_existe ? donnees.totaux.arrivants : '—' }}</td>
+                                            <td colspan="{{ donnees.has_pps_schema ? 3 : 2 }}"></td>
+                                        </tr>
+                                    </tfoot>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ===== ABANDONS / HOMONYMES / DOUBLONS ===== #}
+            {% if donnees.abandons is not empty or donnees.homonymes is not empty or donnees.doublons_dossards is not empty %}
+                <div class="row g-3 mb-4">
+                    {% if donnees.homonymes is not empty or donnees.doublons_dossards is not empty %}
+                        <div class="col-lg-{{ donnees.abandons is not empty ? '6' : '12' }}">
+                            <div class="card border border-warning shadow-sm h-100">
+                                <div class="card-header bg-warning-subtle">
+                                    <h5 class="card-title mb-0 text-warning-emphasis">
+                                        <i class="ri-user-shared-line me-2"></i>Homonymes &amp; doublons détectés
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if donnees.homonymes is not empty %}
+                                        <p class="fw-semibold fs-13 mb-2">
+                                            Présence d'homonymes ({{ donnees.homonymes|length }}) dans les inscriptions :
+                                        </p>
+                                        <ul class="list-group list-group-flush mb-3">
+                                            {% for h in donnees.homonymes %}
+                                                <li class="list-group-item px-0">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <strong>{{ h.nom }}</strong>
+                                                        <span class="badge bg-warning text-dark">{{ h.nombre }} inscriptions</span>
+                                                    </div>
+                                                    <div class="d-flex flex-wrap gap-2 fs-12 text-muted">
+                                                        {% for occ in h.occurrences %}
+                                                            <span class="badge bg-light text-dark border">
+                                                                #{{ occ.dossard }} • {{ occ.distance }} ({{ occ.categorie_affichee }})
+                                                            </span>
+                                                        {% endfor %}
+                                                    </div>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+
+                                    {% if donnees.doublons_dossards is not empty %}
+                                        <p class="fw-semibold text-danger fs-13 mb-2">
+                                            Doublons de numéro de dossard ({{ donnees.doublons_dossards|length }}) :
+                                        </p>
+                                        <ul class="list-group list-group-flush">
+                                            {% for d in donnees.doublons_dossards %}
+                                                <li class="list-group-item px-0">
+                                                    <strong>Dossard #{{ d.dossard }}</strong> ({{ d.nombre }} fois) :
+                                                    {% for occ in d.occurrences %}
+                                                        {{ occ.nom_complet }} ({{ occ.distance }}){{ not loop.last ? ', ' : '' }}
+                                                    {% endfor %}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if donnees.abandons is not empty %}
+                        <div class="col-lg-{{ (donnees.homonymes is not empty or donnees.doublons_dossards is not empty) ? '6' : '12' }}">
+                            <div class="card border border-danger shadow-sm h-100">
+                                <div class="card-header bg-danger-subtle">
+                                    <h5 class="card-title mb-0 text-danger">
+                                        <i class="ri-user-unfollow-line me-2"></i>Abandons déclarés ({{ donnees.abandons|length }})
+                                    </h5>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Dossard</th>
+                                                <th>Participant</th>
+                                                <th>Club</th>
+                                                <th>Source</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for ab in donnees.abandons %}
+                                                <tr>
+                                                    <td><span class="badge bg-danger-subtle text-danger">#{{ ab.dossard }}</span></td>
+                                                    <td class="fw-medium">{{ ab.nom_complet }}</td>
+                                                    <td class="text-muted fs-12">{{ ab.club ?: 'Individuel' }}</td>
+                                                    <td><span class="badge bg-light text-dark border">{{ ab.source }}</span></td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            {# ===== RÉPARTITION PAR CATÉGORIE FFA ===== #}
+            {% if donnees.categories_matrice.colonnes is not empty %}
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                <h5 class="card-title mb-0">
+                                    <i class="ri-pie-chart-2-line text-primary me-2"></i>
+                                    Participants par catégorie {{ donnees.mode_categorie_regroupee ? 'regroupée' : 'FFA' }}
+                                </h5>
+                                <button class="btn btn-sm btn-outline-secondary no-print"
+                                        type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#collapseCategories"
+                                        aria-expanded="true"
+                                        aria-controls="collapseCategories">
+                                    <i class="ri-eye-line me-1"></i>Afficher / Masquer
+                                </button>
+                            </div>
+                            <div class="collapse show" id="collapseCategories">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered align-middle text-center mb-0 fs-12">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="text-start">Course</th>
+                                                {% for cat in donnees.categories_matrice.colonnes %}
+                                                    <th>{{ cat }}</th>
+                                                {% endfor %}
+                                                <th>Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for ligne in donnees.categories_matrice.lignes %}
+                                                <tr>
+                                                    <td class="text-start fw-semibold text-nowrap">{{ ligne.course }}</td>
+                                                    {% for cat in donnees.categories_matrice.colonnes %}
+                                                        {% set nb = ligne.valeurs[cat] ?? 0 %}
+                                                        <td class="{{ nb == 0 ? 'text-muted opacity-50' : 'fw-semibold' }}">
+                                                            {{ nb > 0 ? nb : '·' }}
+                                                        </td>
+                                                    {% endfor %}
+                                                    <td class="fw-bold table-light">{{ ligne.total }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot class="table-light fw-bold">
+                                            <tr>
+                                                <td class="text-start">Total</td>
+                                                {% for cat in donnees.categories_matrice.colonnes %}
+                                                    <td>{{ donnees.categories_matrice.totaux[cat] ?? 0 }}</td>
+                                                {% endfor %}
+                                                <td>{{ donnees.total_inscrits }}</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {# ===== LISTE DES LITIGES ===== #}
+            {% if donnees.has_pps_schema %}
+                <div class="row mb-4 print-break-before" id="section-litiges">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <h5 class="card-title mb-0">
+                                        <i class="ri-file-warning-line text-danger me-2"></i>Liste des litiges (PPS / Mineurs / Annotations)
+                                    </h5>
+                                    <span class="badge {{ donnees.litiges|length > 0 ? 'bg-danger' : 'bg-success' }}">
+                                        {{ donnees.litiges|length }} litige{{ donnees.litiges|length > 1 ? 's' : '' }}
+                                    </span>
+                                </div>
+                                <span class="text-muted fs-12">Triés par course et par nom</span>
+                            </div>
+
+                            {% if donnees.litiges is empty %}
+                                <div class="card-body">
+                                    <div class="alert alert-success mb-0 d-flex align-items-center">
+                                        <i class="ri-checkbox-circle-line fs-18 me-2"></i>
+                                        Aucun litige détecté sur les inscriptions de cet événement.
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr class="fs-12 text-muted text-uppercase">
+                                                <th class="text-center" style="width: 90px;">Dossard</th>
+                                                <th>Participant</th>
+                                                <th>Course</th>
+                                                <th>Catégorie</th>
+                                                <th>Club</th>
+                                                <th>Contact</th>
+                                                <th>Motif du litige</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for p in donnees.litiges %}
+                                                <tr>
+                                                    <td class="text-center">
+                                                        <span class="badge bg-light text-dark border font-monospace">#{{ p.dossard }}</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="fw-semibold {{ p.sexe == 'F' ? 'participant-femme-nom' : '' }}">
+                                                            {{ p.nom_complet }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="fs-12">{{ p.distance }}</td>
+                                                    <td>
+                                                        <span class="badge {{ p.sexe == 'F' ? 'bg-danger-subtle text-danger' : 'bg-primary-subtle text-primary' }}">
+                                                            {{ p.categorie_affichee }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="fs-12 text-muted">{{ p.club ?: 'Individuel' }}</td>
+                                                    <td class="fs-12">
+                                                        {% if p.email or p.phone %}
+                                                            {% if p.phone %}
+                                                                <div><i class="ri-phone-line me-1 text-muted"></i>{{ p.phone }}</div>
+                                                            {% endif %}
+                                                            {% if p.email %}
+                                                                <small class="text-muted">{{ p.email }}</small>
+                                                            {% endif %}
+                                                        {% else %}
+                                                            <span class="text-muted">—</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-danger-subtle text-danger">
+                                                            <i class="ri-close-circle-line me-1"></i>{{ p.litige.motif }}
+                                                        </span>
+                                                        {% if p.litige.annotation and p.litige.type != 'annotation' %}
+                                                            <div class="fs-12 text-danger mt-1">Annotation : {{ p.litige.annotation }}</div>
+                                                        {% elseif p.litige.type == 'annotation' and p.litige.annotation %}
+                                                            <div class="fs-12 text-muted mt-1">{{ p.litige.annotation }}</div>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {# ===== BARRE DE CONTRÔLE : FILTRE COURSE, TRI & RECHERCHE ===== #}
+            <div class="row mb-3 no-print">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body py-3">
+                            <div class="row g-3 align-items-center justify-content-between">
+                                <div class="col-lg-auto">
+                                    <div class="d-flex flex-wrap align-items-center gap-2" role="group" aria-label="Filtrer par course">
+                                        <button type="button"
+                                                class="btn btn-sm btn-primary js-course-filter active"
+                                                data-course="all">
+                                            Toutes ({{ donnees.total_inscrits }})
+                                        </button>
+                                        {% for bloc in donnees.courses_participants %}
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-primary js-course-filter"
+                                                    data-course="{{ bloc.slug }}">
+                                                {{ bloc.course }} ({{ bloc.total }})
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-auto d-flex flex-wrap align-items-center gap-2">
+                                    <div class="btn-group btn-group-sm" role="group" aria-label="Ordre de tri">
+                                        <button type="button"
+                                                class="btn btn-primary js-sort-mode active"
+                                                data-sort="nom">
+                                            <i class="ri-sort-alphabet-asc me-1"></i>Tri par Nom
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-outline-primary js-sort-mode"
+                                                data-sort="dossard">
+                                            <i class="ri-sort-number-asc me-1"></i>Tri par Dossard
+                                        </button>
+                                    </div>
+
+                                    {% if donnees.has_pps_schema %}
+                                        <div class="form-check form-switch mb-0 ms-1">
+                                            <input class="form-check-input" type="checkbox" id="filterLitigeOnly">
+                                            <label class="form-check-label fs-13" for="filterLitigeOnly">Litiges uniquement</label>
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="input-group input-group-sm" style="width: 260px;">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="ri-search-line text-muted"></i>
+                                        </span>
+                                        <input type="text"
+                                               id="participantSearch"
+                                               class="form-control border-start-0"
+                                               placeholder="Rechercher dossard, nom, club...">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ===== LISTES DES PARTICIPANTS PAR COURSE ===== #}
+            {% for bloc in donnees.courses_participants %}
+                <div class="row mb-4 js-course-section print-break-before" data-course-slug="{{ bloc.slug }}">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <h5 class="card-title mb-0">
+                                        <i class="ri-run-line text-primary me-2"></i>Liste des participants — {{ bloc.course }}
+                                    </h5>
+                                    <span class="badge bg-primary-subtle text-primary js-visible-count">
+                                        {{ bloc.total }} participant{{ bloc.total > 1 ? 's' : '' }}
+                                    </span>
+                                </div>
+                                <span class="text-muted fs-12 js-sort-label">
+                                    Triés par {{ donnees.tri_par_sexe_nom ? 'sexe puis nom' : 'nom' }}
+                                </span>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped align-middle mb-0 js-participants-table">
+                                    <thead class="table-light">
+                                        <tr class="fs-12 text-muted text-uppercase">
+                                            <th class="text-center" style="width: 95px;">Dossard</th>
+                                            <th>Nom &amp; Prénom</th>
+                                            <th>Distance</th>
+                                            <th style="width: 120px;">Catégorie</th>
+                                            <th class="text-center" style="width: 75px;">Sexe</th>
+                                            <th>Club</th>
+                                            {% if donnees.has_pps_schema %}
+                                                <th>Statut dossier</th>
+                                            {% endif %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for p in bloc.participants %}
+                                            <tr data-ordre-nom="{{ p.ordre_nom }}"
+                                                data-ordre-dossard="{{ p.ordre_dossard }}"
+                                                data-litige="{{ p.litige.est_en_litige ? '1' : '0' }}"
+                                                data-search="{{ (p.dossard ~ ' ' ~ p.nom_complet ~ ' ' ~ p.club ~ ' ' ~ p.categorie_affichee ~ ' ' ~ (p.litige.motif ?? ''))|lower }}">
+                                                <td class="text-center">
+                                                    <span class="badge bg-light text-dark border fw-semibold font-monospace px-2 py-1">
+                                                        #{{ p.dossard }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="fw-semibold {{ p.sexe == 'F' ? 'participant-femme-nom' : '' }}">
+                                                        {{ p.nom_complet }}
+                                                    </span>
+                                                    {% if p.rgpd %}
+                                                        <span class="badge bg-secondary-subtle text-secondary ms-1 fs-11">RGPD</span>
+                                                    {% endif %}
+                                                    {% if p.abandon %}
+                                                        <span class="badge bg-danger-subtle text-danger ms-1 fs-11">Abandon</span>
+                                                    {% endif %}
+                                                    {% if p.annee %}
+                                                        <small class="text-muted d-block fs-11">Né(e) en {{ p.annee }}</small>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="fs-12">{{ p.distance }}</td>
+                                                <td>
+                                                    <span class="badge {{ p.sexe == 'F' ? 'bg-danger-subtle text-danger' : 'bg-primary-subtle text-primary' }} fw-medium">
+                                                        {{ p.categorie_affichee }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">
+                                                    {% if p.sexe == 'F' %}
+                                                        <span class="badge bg-danger-subtle text-danger">F</span>
+                                                    {% elseif p.sexe == 'H' %}
+                                                        <span class="badge bg-info-subtle text-info">H</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary-subtle text-secondary">{{ p.sexe }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="fs-12">
+                                                    {{ p.club ?: 'Individuel' }}
+                                                    {% if p.licence %}
+                                                        <small class="text-muted d-block fs-11">Lic. {{ p.licence }}</small>
+                                                    {% endif %}
+                                                </td>
+                                                {% if donnees.has_pps_schema %}
+                                                    <td class="fs-12">
+                                                        {% if p.litige.est_en_litige %}
+                                                            <span class="badge bg-danger-subtle text-danger">
+                                                                <i class="ri-close-circle-line me-1"></i>{{ p.litige.motif }}
+                                                            </span>
+                                                            {% if p.litige.annotation and p.litige.type != 'annotation' %}
+                                                                <div class="text-danger fs-11 mt-1">{{ p.litige.annotation }}</div>
+                                                            {% endif %}
+                                                        {% else %}
+                                                            <span class="badge bg-success-subtle text-success">
+                                                                <i class="ri-check-line me-1"></i>OK
+                                                            </span>
+                                                        {% endif %}
+                                                    </td>
+                                                {% endif %}
+                                            </tr>
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="{{ donnees.has_pps_schema ? 7 : 6 }}" class="text-center py-4 text-muted">
+                                                    Aucun participant inscrit sur cette distance.
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+{% block vendor_scripts %}
+    <script type="module" src="{{ asset('assets/js/app.js') }}"></script>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const courseButtons = document.querySelectorAll('.js-course-filter');
+    const sortButtons = document.querySelectorAll('.js-sort-mode');
+    const searchInput = document.getElementById('participantSearch');
+    const litigeCheckbox = document.getElementById('filterLitigeOnly');
+    const courseSections = document.querySelectorAll('.js-course-section');
+    const triSexeNom = {{ (donnees and donnees.tri_par_sexe_nom) ? 'true' : 'false' }};
+
+    let selectedCourse = 'all';
+    let currentSort = 'nom';
+
+    function appliquerFiltres() {
+        const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        const onlyLitige = litigeCheckbox ? litigeCheckbox.checked : false;
+
+        courseSections.forEach(section => {
+            const slug = section.dataset.courseSlug;
+            const matchCourse = (selectedCourse === 'all' || selectedCourse === slug);
+            section.style.display = matchCourse ? '' : 'none';
+            if (!matchCourse) return;
+
+            const rows = section.querySelectorAll('tbody tr[data-search]');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const text = row.dataset.search || '';
+                const isLitige = row.dataset.litige === '1';
+                const visible = text.includes(query) && (!onlyLitige || isLitige);
+                row.style.display = visible ? '' : 'none';
+                if (visible) visibleCount++;
+            });
+
+            const countBadge = section.querySelector('.js-visible-count');
+            if (countBadge) {
+                countBadge.textContent = visibleCount + ' participant' + (visibleCount > 1 ? 's' : '');
+            }
+        });
+    }
+
+    function appliquerTri(mode) {
+        currentSort = mode;
+        const attr = mode === 'dossard' ? 'ordreDossard' : 'ordreNom';
+        const label = mode === 'dossard'
+            ? 'Triés par numéro de dossard'
+            : (triSexeNom ? 'Triés par sexe puis nom' : 'Triés par nom');
+
+        courseSections.forEach(section => {
+            const tbody = section.querySelector('.js-participants-table tbody');
+            const sortLabel = section.querySelector('.js-sort-label');
+            if (sortLabel) sortLabel.textContent = label;
+            if (!tbody) return;
+
+            const rows = Array.from(tbody.querySelectorAll('tr[data-ordre-nom]'));
+            if (rows.length === 0) return;
+
+            rows.sort((a, b) => Number(a.dataset[attr]) - Number(b.dataset[attr]));
+            const fragment = document.createDocumentFragment();
+            rows.forEach(row => fragment.appendChild(row));
+            tbody.appendChild(fragment);
+        });
+    }
+
+    courseButtons.forEach(btn => {
+        btn.addEventListener('click', function () {
+            courseButtons.forEach(b => {
+                b.classList.remove('btn-primary', 'active');
+                b.classList.add('btn-outline-primary');
+            });
+            this.classList.remove('btn-outline-primary');
+            this.classList.add('btn-primary', 'active');
+            selectedCourse = this.dataset.course;
+            appliquerFiltres();
+        });
+    });
+
+    sortButtons.forEach(btn => {
+        btn.addEventListener('click', function () {
+            sortButtons.forEach(b => {
+                b.classList.remove('btn-primary', 'active');
+                b.classList.add('btn-outline-primary');
+            });
+            this.classList.remove('btn-outline-primary');
+            this.classList.add('btn-primary', 'active');
+            appliquerTri(this.dataset.sort);
+        });
+    });
+
+    if (searchInput) {
+        searchInput.addEventListener('input', appliquerFiltres);
+    }
+    if (litigeCheckbox) {
+        litigeCheckbox.addEventListener('change', appliquerFiltres);
+    }
+});
+</script>
+{% endblock %}
