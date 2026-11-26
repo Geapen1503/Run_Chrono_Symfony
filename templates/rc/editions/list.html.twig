@@ -5,46 +5,117 @@
 {% block head_sub_title %}Catalogue{% endblock %}
 
 {% block page_contents %}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'error' ? 'danger' : label }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
     {% if db_error %}
         <div class="alert alert-warning" role="alert">
             Connexion catalogue impossible (la page reste utilisable pour créer une édition après configuration MySQL).
             <br><small class="text-muted">{{ db_error }}</small>
         </div>
     {% endif %}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <p class="text-muted mb-0">Éditions enregistrées dans <code>param_inscription_manuelle</code>.</p>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <p class="text-muted mb-0">
+            Éditions enregistrées dans <code>param_inscription_manuelle</code>.
+            {% if active_id_html %}
+                <span class="badge bg-success-subtle text-success ms-1">
+                    <i class="ri-broadcast-line me-1"></i>Actif : <code class="text-success">{{ active_id_html }}</code>
+                </span>
+            {% endif %}
+        </p>
         <a class="btn btn-primary" href="{{ path('rc_editions_new') }}">
             <i class="ri-add-line"></i> Nouvelle édition
         </a>
     </div>
 
     <div class="card">
+        <div class="card-header border-bottom-0 pb-0">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-6 col-lg-5">
+                    <label class="form-label visually-hidden" for="editionsSearch">Rechercher un événement</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="ri-search-line text-muted"></i>
+                        </span>
+                        <input type="search"
+                               id="editionsSearch"
+                               class="form-control border-start-0"
+                               placeholder="Nom de l'événement, date, id_html, tables…"
+                               autocomplete="off">
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-7 text-md-end">
+                    <span class="text-muted fs-13">
+                        <span class="js-editions-visible-count">{{ editions|length }}</span> / {{ editions|length }} visible(s)
+                    </span>
+                </div>
+            </div>
+        </div>
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
+            <table class="table table-hover mb-0 align-middle" id="editionsCatalogTable">
+                <thead class="table-light">
                     <tr>
                         <th>Date</th>
                         <th>id_html</th>
                         <th>Événement</th>
                         <th>run_*</th>
                         <th>dag_import_*</th>
-                        <th></th>
+                        <th class="text-end" style="min-width: 11rem;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                 {% for row in editions %}
-                    <tr>
-                        <td>{{ row.date_evenement }}</td>
+                    {% set estActif = active_id_html and active_id_html == row.id_html %}
+                    <tr class="{{ estActif ? 'table-success' : '' }}"
+                        data-search="{{ (row.evenement ~ ' ' ~ row.date_evenement ~ ' ' ~ row.id_html ~ ' ' ~ row.table_run ~ ' ' ~ row.table_dag)|lower }}">
+                        <td class="text-nowrap">
+                            {{ row.date_evenement }}
+                            {% if estActif %}
+                                <span class="badge bg-success ms-1" title="Événement actif pour /rc et legacy">
+                                    <i class="ri-broadcast-line"></i>
+                                </span>
+                            {% endif %}
+                        </td>
                         <td><code>{{ row.id_html }}</code></td>
-                        <td>{{ row.evenement }}</td>
-                        <td><small>{{ row.table_run }}</small></td>
-                        <td><small>{{ row.table_dag }}</small></td>
                         <td>
-                            <a href="{{ path('rc_editions_edit', { idHtml: row.id_html }) }}" class="btn btn-sm btn-outline-primary">Modifier</a>
+                            <span class="fw-semibold">{{ row.evenement }}</span>
+                            {% if estActif %}
+                                <span class="badge bg-success-subtle text-success ms-1 fs-11">Actif</span>
+                            {% endif %}
+                        </td>
+                        <td><small class="font-monospace">{{ row.table_run }}</small></td>
+                        <td><small class="font-monospace">{{ row.table_dag }}</small></td>
+                        <td class="text-end text-nowrap">
+                            <div class="d-inline-flex gap-1 align-items-center">
+                                <a href="{{ path('rc_editions_edit', { idHtml: row.id_html }) }}" class="btn btn-sm btn-outline-primary">
+                                    Modifier
+                                </a>
+                                {% if estActif %}
+                                    <span class="btn btn-sm btn-success disabled" title="Déjà l'événement actif">
+                                        <i class="ri-broadcast-line"></i>
+                                    </span>
+                                {% else %}
+                                    <form method="post" action="{{ path('rc_editions_activate', { idHtml: row.id_html }) }}" class="d-inline m-0">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('edition_activate') }}">
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-success"
+                                                title="Définir comme événement actif (parametre_course + /rc)">
+                                            <i class="ri-broadcast-line"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                 {% else %}
-                    <tr>
+                    <tr class="js-editions-empty-row">
                         <td colspan="6" class="text-muted p-4">Aucune édition (connexion MySQL ou table vide).</td>
                     </tr>
                 {% endfor %}
@@ -56,4 +127,34 @@
 
 {% block vendor_scripts %}
     <script type="module" src="{{ asset('assets/js/app.js') }}"></script>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('editionsSearch');
+    const table = document.getElementById('editionsCatalogTable');
+    const countLabel = document.querySelector('.js-editions-visible-count');
+    if (!table || !searchInput) return;
+
+  function filtrerEditions() {
+        const query = searchInput.value.toLowerCase().trim();
+        const rows = table.querySelectorAll('tbody tr[data-search]');
+        let visibleCount = 0;
+
+        rows.forEach(function (row) {
+            const haystack = row.dataset.search || '';
+            const visible = query === '' || haystack.includes(query);
+            row.style.display = visible ? '' : 'none';
+            if (visible) visibleCount++;
+        });
+
+        if (countLabel) {
+            countLabel.textContent = String(visibleCount);
+        }
+    }
+
+    searchInput.addEventListener('input', filtrerEditions);
+});
+</script>
 {% endblock %}

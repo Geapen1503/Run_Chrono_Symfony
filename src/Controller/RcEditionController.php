@@ -8,6 +8,7 @@ use App\Edition\Service\EditionMediaStorage;
 use App\Edition\Service\EditionNamingService;
 use App\Edition\Service\EditionPayloadFactory;
 use App\Edition\Service\EditionWorkflow;
+use App\Service\EvenementActifService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -31,7 +32,7 @@ class RcEditionController extends AbstractController
     }
 
     #[Route('', name: 'rc_editions_list', methods: ['GET'])]
-    public function list(): Response
+    public function list(EvenementActifService $evenementActifService): Response
     {
         $editions = [];
         $dbError = null;
@@ -41,10 +42,36 @@ class RcEditionController extends AbstractController
             $dbError = $e->getMessage();
         }
 
+        $actif = $evenementActifService->getEvenementActif();
+        $activeIdHtml = $actif !== null ? trim((string) ($actif['id_html'] ?? '')) : '';
+
         return $this->render('rc/editions/list.html.twig', [
             'editions' => $editions,
             'db_error' => $dbError,
+            'active_id_html' => $activeIdHtml,
         ]);
+    }
+
+    #[Route('/{idHtml}/activer', name: 'rc_editions_activate', methods: ['POST'])]
+    public function activate(string $idHtml, Request $request): Response
+    {
+        if (!preg_match('/^20\d{6}_[A-Za-z0-9_]+$/', $idHtml)) {
+            throw $this->createNotFoundException('Édition invalide.');
+        }
+
+        if (!$this->isCsrfTokenValid('edition_activate', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+
+        try {
+            $this->workflow->activateEdition($idHtml);
+            $row = $this->catalogReader->loadForEdit($idHtml);
+            $this->addFlash('success', 'Édition active : '.$row->eventName.' (parametre_course.php + console /rc).');
+        } catch (\Throwable $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
+
+        return $this->redirectToRoute('rc_editions_list');
     }
 
     #[Route('/nouvelle', name: 'rc_editions_new', methods: ['GET', 'POST'])]

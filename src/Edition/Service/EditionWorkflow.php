@@ -61,4 +61,15 @@ final class EditionWorkflow
 
         return ['warnings' => $warnings, 'messages' => $messages];
     }
+
+    /**
+     * Active une édition existante sans repasser par le formulaire (legacy + contexte /rc).
+     */
+    public function activateEdition(string $idHtml): void
+    {
+        $this->naming->assertSafeIdHtml($idHtml);
+        $this->activator->activate($idHtml);
+        $this->activeEditionStore->set($idHtml);
+        $this->evenementActifService->definirEvenementActifEnSession($idHtml);
+    }
 }
