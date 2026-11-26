@@ -63,6 +63,7 @@ final class EditionCatalogReader
             tableRun: (string) ($row['table_run'] ?? ''),
             tableDag: (string) ($row['table_dag'] ?? ''),
             tableDepartTspreel: (string) ($row['table_depart_tspreel'] ?? ''),
+            tableIntermediaire: (string) ($row['table_inter'] ?? $row['table_intermediaire'] ?? ''),
             podium: (int) ($row['podium'] ?? 3),
             podiumLimit: (int) ($row['podium_limit'] ?? $row['limit'] ?? 1),
             diplome: (string) ($row['diplome'] ?? ''),

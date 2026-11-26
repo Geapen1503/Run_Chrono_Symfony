@@ -43,7 +43,7 @@ final class ParamInscriptionCatalogSync
                 id_html, table_depart_tspreel, date_evenement, fichier_course,
                 lib_date_evenement, evenement,
                 nom_course_1, nom_course_2, nom_course_3, nom_course_4, nom_course_5, nom_course_6,
-                table_dag, table_run, categorie_ffa,
+                table_dag, table_run, table_inter, categorie_ffa,
                 arg_1, arg_2, arg_3, arg_4, arg_5, arg_6,
                 podium, podium_limit, diplome,
                 heure_depart_course_1, heure_depart_course_2, heure_depart_course_3,
@@ -52,7 +52,7 @@ final class ParamInscriptionCatalogSync
                 :id_html, :table_depart_tspreel, :date_evenement, :fichier_course,
                 :lib_date, :evenement,
                 :c1, :c2, :c3, :c4, :c5, :c6,
-                :table_dag, :table_run, :categorie_ffa,
+                :table_dag, :table_run, :table_inter, :categorie_ffa,
                 :arg_1, :arg_2, :arg_3, :arg_4, :arg_5, :arg_6,
                 :podium, :podium_limit, :diplome,
                 :h1, :h2, :h3, :h4, :h5, :h6
@@ -72,6 +72,8 @@ final class ParamInscriptionCatalogSync
                 'c6' => $nom(6),
                 'table_dag' => $payload->tableDag,
                 'table_run' => $payload->tableRun,
+                // Colonne catalogue legacy (table intermédiaires) — NOT NULL sur prod
+                'table_inter' => $payload->tableIntermediaire,
                 'categorie_ffa' => $payload->categorieFfa,
                 'arg_1' => $payload->siteInscription,
                 'arg_2' => $payload->afficheFilename,
