@@ -98,11 +98,11 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">table_run</label>
-                    <input type="text" name="table_run" class="form-control" required value="{{ payload.tableRun ?: suggest.table_run ?? '' }}">
+                    <input type="text" name="table_run" class="form-control" required value="{{ payload.tableRun ? payload.tableRun : (suggest.table_run ?? '') }}">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">table_dag_import</label>
-                    <input type="text" name="table_dag" class="form-control" required value="{{ payload.tableDag ?: suggest.table_dag ?? '' }}">
+                    <input type="text" name="table_dag" class="form-control" required value="{{ payload.tableDag ? payload.tableDag : (suggest.table_dag ?? '') }}">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">table_intermediaire (optionnel)</label>

@@ -23,9 +23,9 @@ services:
 
     App\Edition\Service\LegacyPaths:
         arguments:
-            $legacyRoot: '%runchrono.legacy_root%'
-            $loadImagesDir: '%runchrono.load_images_dir%'
-            $fichierCoursePrefix: '%runchrono.fichier_course_prefix%'
+            $legacyRoot: '%runchrono_legacy_root%'
+            $loadImagesDir: '%runchrono_load_images_dir%'
+            $fichierCoursePrefix: '%runchrono_fichier_course_prefix%'
 
     App\Edition\Service\IncludesFileGenerator:
         arguments:

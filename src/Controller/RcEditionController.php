@@ -33,15 +33,17 @@ class RcEditionController extends AbstractController
     #[Route('', name: 'rc_editions_list', methods: ['GET'])]
     public function list(): Response
     {
+        $editions = [];
+        $dbError = null;
         try {
             $editions = $this->catalogReader->listRecent();
         } catch (\Throwable $e) {
-            $editions = [];
-            $this->addFlash('warning', 'Impossible de lire param_inscription_manuelle : '.$e->getMessage());
+            $dbError = $e->getMessage();
         }
 
         return $this->render('rc/editions/list.html.twig', [
             'editions' => $editions,
+            'db_error' => $dbError,
         ]);
     }
 
