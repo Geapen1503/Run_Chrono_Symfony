@@ -1,0 +1,250 @@
+{% extends 'partials/layouts/master.html.twig' %}
+
+{% block page_title %}Podium — {{ nom_course }}{% endblock %}
+{% block head_title %}Podium — {{ nom_course }}{% endblock %}
+{% block head_sub_title %}{{ evenement.evenement }}{% endblock %}
+
+{% block page_contents %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm overflow-hidden">
+                <div class="card-body bg-light-subtle p-4">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge bg-warning text-dark fs-13 px-3 py-2">
+                                    <i class="ri-medal-fill me-1"></i>Podium {{ podium_nb }} marches
+                                </span>
+                                <span class="badge bg-primary-subtle text-primary fs-13 px-3 py-2">
+                                    <i class="ri-run-line me-1"></i>{{ nom_course }}
+                                </span>
+                            </div>
+                            <h4 class="mb-1 text-dark fw-bold">{{ evenement.evenement }}</h4>
+                            <p class="text-muted mb-0 fs-13">
+                                <i class="ri-calendar-line me-1"></i>{{ evenement.lib_date_evenement }}
+                            </p>
+                        </div>
+
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <a href="{{ path('rc_resultats_classements') }}" class="btn btn-outline-secondary">
+                                <i class="ri-arrow-left-line me-1"></i>Retour aux événements
+                            </a>
+                            <a href="{{ path('rc_resultats_classement_course', {idHtml: evenement.id_html, nomCourse: nom_course}) }}" class="btn btn-primary">
+                                <i class="ri-bar-chart-box-line me-1"></i>Classement complet
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-xl-6 col-lg-12">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-info-subtle border-0 py-3">
+                    <h5 class="card-title text-info mb-0 d-flex align-items-center gap-2">
+                        <i class="ri-men-line fs-18"></i> Podium Scratch Hommes
+                    </h5>
+                </div>
+                <div class="card-body p-3">
+                    {% if scratch_hommes is empty %}
+                        <p class="text-muted text-center py-4 mb-0">Aucun coureur masculin enregistré.</p>
+                    {% else %}
+                        <div class="d-flex flex-column gap-3">
+                            {% for runner in scratch_hommes %}
+                                <div class="d-flex align-items-center justify-content-between p-3 rounded-3 border bg-white shadow-xs">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold fs-16"
+                                             style="width: 44px; height: 44px; 
+                                             {% if loop.index == 1 %}background: #ffc107; color: #212529;
+                                             {% elseif loop.index == 2 %}background: #dee2e6; color: #495057;
+                                             {% elseif loop.index == 3 %}background: #f8d7da; color: #842029;
+                                             {% else %}background: #e9ecef; color: #6c757d;{% endif %}">
+                                            {% if loop.index == 1 %}🥇
+                                            {% elseif loop.index == 2 %}🥈
+                                            {% elseif loop.index == 3 %}🥉
+                                            {% else %}{{ loop.index }}
+                                            {% endif %}
+                                        </div>
+
+                                        <div>
+                                            <div class="fw-bold text-dark fs-15">{{ runner.nom_prenom|raw }}</div>
+                                            <div class="text-muted fs-12 d-flex flex-wrap align-items-center gap-2 mt-1">
+                                                <span class="badge bg-light text-dark border">#{{ runner.dossard }}</span>
+                                                <span class="badge bg-primary-subtle text-primary">{{ runner.categorie_run|default(runner.categorie_2019) }}</span>
+                                                {% if runner.club %}
+                                                    <span>{{ runner.club }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-end">
+                                        <div class="fw-bold text-success font-monospace fs-15">
+                                            {{ runner.chrono_php|default(runner.chrono_mysql) }}
+                                        </div>
+                                        {% if runner.vitesse_kilo_heure is defined and runner.vitesse_kilo_heure %}
+                                            <small class="text-muted fs-11">{{ runner.vitesse_kilo_heure }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6 col-lg-12">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-danger-subtle border-0 py-3">
+                    <h5 class="card-title text-danger mb-0 d-flex align-items-center gap-2">
+                        <i class="ri-women-line fs-18"></i> Podium Scratch Femmes
+                    </h5>
+                </div>
+                <div class="card-body p-3">
+                    {% if scratch_femmes is empty %}
+                        <p class="text-muted text-center py-4 mb-0">Aucune coureuse féminine enregistrée.</p>
+                    {% else %}
+                        <div class="d-flex flex-column gap-3">
+                            {% for runner in scratch_femmes %}
+                                <div class="d-flex align-items-center justify-content-between p-3 rounded-3 border bg-white shadow-xs">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold fs-16"
+                                             style="width: 44px; height: 44px; 
+                                             {% if loop.index == 1 %}background: #ffc107; color: #212529;
+                                             {% elseif loop.index == 2 %}background: #dee2e6; color: #495057;
+                                             {% elseif loop.index == 3 %}background: #f8d7da; color: #842029;
+                                             {% else %}background: #e9ecef; color: #6c757d;{% endif %}">
+                                            {% if loop.index == 1 %}🥇
+                                            {% elseif loop.index == 2 %}🥈
+                                            {% elseif loop.index == 3 %}🥉
+                                            {% else %}{{ loop.index }}
+                                            {% endif %}
+                                        </div>
+
+                                        <div>
+                                            <div class="fw-bold text-dark fs-15">{{ runner.nom_prenom|raw }}</div>
+                                            <div class="text-muted fs-12 d-flex flex-wrap align-items-center gap-2 mt-1">
+                                                <span class="badge bg-light text-dark border">#{{ runner.dossard }}</span>
+                                                <span class="badge bg-primary-subtle text-primary">{{ runner.categorie_run|default(runner.categorie_2019) }}</span>
+                                                {% if runner.club %}
+                                                    <span>{{ runner.club }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-end">
+                                        <div class="fw-bold text-success font-monospace fs-15">
+                                            {{ runner.chrono_php|default(runner.chrono_mysql) }}
+                                        </div>
+                                        {% if runner.vitesse_kilo_heure is defined and runner.vitesse_kilo_heure %}
+                                            <small class="text-muted fs-11">{{ runner.vitesse_kilo_heure }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if scratch_mixtes is not empty %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-secondary-subtle border-0 py-3">
+                        <h5 class="card-title text-secondary mb-0">
+                            <i class="ri-group-line me-1"></i> Podium Scratch Mixtes
+                        </h5>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="row g-3">
+                            {% for runner in scratch_mixtes %}
+                                <div class="col-md-4">
+                                    <div class="p-3 rounded-3 border bg-white">
+                                        <div class="fw-bold fs-15">{{ runner.nom_prenom|raw }}</div>
+                                        <div class="text-muted fs-12">Dossard #{{ runner.dossard }} — {{ runner.chrono_php }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2 bg-light-subtle py-3">
+                    <div>
+                        <h5 class="card-title mb-1">
+                            <i class="ri-award-line me-1 text-primary"></i> Podiums par Catégorie
+                        </h5>
+                        <p class="card-subtitle text-muted fs-12 mb-0">
+                            Non-cumul avec le scratch : les {{ podium_nb }} premiers de chaque sexe sont exclus des catégories.
+                        </p>
+                    </div>
+                    <span class="badge bg-secondary-subtle text-secondary fs-12">
+                        Limite : {{ limit_cat }} récompensé{{ limit_cat > 1 ? 's' : '' }} / catégorie
+                    </span>
+                </div>
+
+                <div class="card-body p-4">
+                    {% if categories is empty %}
+                        <p class="text-muted text-center py-4 mb-0">Aucun arrivant supplémentaire dans les catégories.</p>
+                    {% else %}
+                        <div class="row g-3">
+                            {% for catNom, runners in categories %}
+                                <div class="col-xl-4 col-md-6">
+                                    <div class="border rounded-3 p-3 bg-white h-100">
+                                        <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                                            <span class="badge bg-primary fs-12 px-2 py-1">{{ catNom }}</span>
+                                            <small class="text-muted fs-11">
+                                                {{ runners|length }} récompensé{{ runners|length > 1 ? 's' : '' }}
+                                            </small>
+                                        </div>
+
+                                        <div class="d-flex flex-column gap-2">
+                                            {% for runner in runners %}
+                                                <div class="d-flex align-items-center justify-content-between fs-13">
+                                                    <div>
+                                                        <span class="fw-semibold text-dark">{{ runner.nom_prenom|raw }}</span>
+                                                        <span class="text-muted fs-11">(#{{ runner.dossard }})</span>
+                                                        {% if runner.club %}
+                                                            <div class="text-muted fs-11 text-truncate" style="max-width: 180px;">
+                                                                {{ runner.club }}
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <div class="fw-bold text-success font-monospace fs-12">
+                                                            {{ runner.chrono_php|default(runner.chrono_mysql) }}
+                                                        </div>
+                                                        <span class="badge bg-light text-muted border fs-10">
+                                                            Scratch: {{ runner.count_scracth }}<sup>e</sup>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block vendor_scripts %}
+    <script type="module" src="{{ asset('assets/js/app.js') }}"></script>
+{% endblock %}

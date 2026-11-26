@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}RunChrono - Résultats{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+    <div class="page-resultats-wrapper">
+        {# ===== LISTE DES COURSES DYNAMIQUES ===== #}
+        {% for event in evenements %}
+            <div class="container">
+
+                <div id="{{ event.id_html }}" class="course-header">
+                    MERCI Pour votre participation à {{ event.evenement }} <br />
+                    le {{ event.lib_date_evenement }}
+                </div>
+
+                <div class="course-content">
+                    <img src="/load_images/{{ event.arg_2 }}" alt="{{ event.arg_2 }}" width="100">
+                </div>
+
+                <div class="course-details">
+                    {% for course in event.courses_nettoyees %}
+                        <div class="course-buttons">
+                            {% if course.a_des_resultats %}
+                                <a class="{{ course.couleur }}" href="/dag/4R_GET_classement_tab_web.php?evenement={{ event.evenement|url_encode }}&nom_course={{ course.nom|url_encode }}" target="_blank">
+                                    Classement {{ course.nom }}
+                                </a>
+                                <a class="{{ course.couleur }}" href="/dag/6R_GET_podium_web.php?evenement={{ event.evenement|url_encode }}&nom_course={{ course.nom|url_encode }}" target="_blank">
+                                    Podium {{ course.nom }}
+                                </a>
+                            {% else %}
+                                <a href="#" class="btn-gris">{{ course.nom }} : Attente des résultats</a>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    {% if event.arg_1 %}
+                        <div class="course-buttons">
+                            <a class="btn-red" href="{{ event.arg_1 }}" target="_blank">Plateforme Inscription</a>
+                        </div>
+                    {% endif %}
+
+                    {% if event.custom_resultat %}
+                        {{ event.custom_resultat|raw }}
+                    {% endif %}
+                </div>
+
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

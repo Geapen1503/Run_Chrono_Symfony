@@ -1,0 +1,251 @@
+{% extends 'partials/layouts/master.html.twig' %}
+
+{% block page_title %}Classement — {{ nom_course }}{% endblock %}
+{% block head_title %}{{ nom_course }}{% endblock %}
+{% block head_sub_title %}{{ evenement.evenement }}{% endblock %}
+
+{% block page_contents %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm overflow-hidden">
+                <div class="card-body bg-light-subtle p-4">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge bg-primary fs-13 px-3 py-2">
+                                    <i class="ri-run-line me-1"></i>{{ nom_course }}
+                                </span>
+                                <span class="badge bg-secondary-subtle text-secondary fs-13 px-3 py-2">
+                                    <i class="ri-user-star-line me-1"></i>{{ total_arrivants }} arrivant{{ total_arrivants > 1 ? 's' : '' }}
+                                </span>
+                                {% if has_tps_reel %}
+                                    <span class="badge bg-info-subtle text-info fs-13 px-2 py-2" title="Temps réel calculé au départ">
+                                        <i class="ri-timer-line me-1"></i>Temps réel inclus
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <h4 class="mb-1 text-dark fw-bold">{{ evenement.evenement }}</h4>
+                            <p class="text-muted mb-0 fs-13">
+                                <i class="ri-calendar-line me-1"></i>{{ evenement.lib_date_evenement }}
+                            </p>
+                        </div>
+
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <a href="{{ path('rc_resultats_classements') }}" class="btn btn-outline-secondary">
+                                <i class="ri-arrow-left-line me-1"></i>Retour aux événements
+                            </a>
+                            <a href="{{ path('rc_resultats_podium_course', {idHtml: evenement.id_html, nomCourse: nom_course}) }}" class="btn btn-warning text-dark fw-semibold">
+                                <i class="ri-medal-fill me-1"></i>Voir le podium
+                            </a>
+                            <a href="{{ path('rc_resultats_top_evenement', {idHtml: evenement.id_html}) }}" class="btn btn-outline-success">
+                                <i class="ri-trophy-line me-1"></i>Top 3 événement
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body py-3">
+                    <div class="row g-3 align-items-center justify-content-between">
+                        <div class="col-md-5 col-lg-4">
+                            <form method="get" action="{{ path('rc_resultats_classement_course', {idHtml: evenement.id_html, nomCourse: nom_course}) }}" class="d-flex align-items-center gap-2">
+                                <label for="clubSelect" class="form-label mb-0 text-muted fs-13 text-nowrap">
+                                    <i class="ri-community-line me-1"></i>Club :
+                                </label>
+                                <select id="clubSelect" name="club" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <option value="">Tous les clubs</option>
+                                    {% for c in clubs %}
+                                        <option value="{{ c }}" {{ club_filtre == c ? 'selected' : '' }}>{{ c }}</option>
+                                    {% endfor %}
+                                </select>
+                                {% if club_filtre %}
+                                    <a href="{{ path('rc_resultats_classement_course', {idHtml: evenement.id_html, nomCourse: nom_course}) }}" class="btn btn-sm btn-outline-danger" title="Effacer le filtre club">
+                                        <i class="ri-close-line"></i>
+                                    </a>
+                                {% endif %}
+                            </form>
+                        </div>
+
+                        <div class="col-md-5 col-lg-4">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="ri-search-line text-muted"></i>
+                                </span>
+                                <input type="text" id="tableSearch" class="form-control border-start-0" placeholder="Filtrer par nom, prénom ou dossard...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle mb-0" id="classementTable">
+                        <thead class="table-light">
+                            <tr class="fs-13 text-muted text-uppercase">
+                                <th style="width: 70px;" class="text-center">Place</th>
+                                <th style="width: 80px;" class="text-center">Dossard</th>
+                                <th>Participant</th>
+                                <th>Catégorie</th>
+                                <th style="width: 80px;" class="text-center">Sexe</th>
+                                <th>Club / Licence</th>
+                                <th class="text-end">Chrono</th>
+                                {% if has_tps_reel %}
+                                    <th class="text-end">Temps réel</th>
+                                {% endif %}
+                                {% if has_temps_inter %}
+                                    <th class="text-end">Intermédiaire</th>
+                                {% endif %}
+                                <th class="text-center" style="width: 80px;">Qualif.</th>
+                                <th class="text-end">Allure / Vitesse</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for runner in arrivants %}
+                                <tr>
+                                    <td class="text-center fw-bold">
+                                        {% if runner.count_scracth == 1 %}
+                                            <span class="badge bg-warning text-dark px-2 py-1 fs-13" title="1er Scratch">
+                                                <i class="ri-medal-fill"></i> 1
+                                            </span>
+                                        {% elseif runner.count_scracth == 2 %}
+                                            <span class="badge bg-secondary-subtle text-secondary px-2 py-1 fs-13 border" title="2ème Scratch">
+                                                <i class="ri-medal-line"></i> 2
+                                            </span>
+                                        {% elseif runner.count_scracth == 3 %}
+                                            <span class="badge bg-danger-subtle text-danger px-2 py-1 fs-13" title="3ème Scratch">
+                                                <i class="ri-medal-line"></i> 3
+                                            </span>
+                                        {% else %}
+                                            <span class="text-dark">{{ runner.count_scracth }}</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark border fw-medium px-2 py-1">
+                                            #{{ runner.dossard }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <div class="fw-semibold text-dark">{{ runner.nom_prenom|raw }}</div>
+                                        {% if runner.annee is defined and runner.annee %}
+                                            <small class="text-muted fs-11">Né(e) en {{ runner.annee }}</small>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-primary-subtle text-primary fw-medium px-2 py-1">
+                                            {{ runner.categorie_run|default(runner.categorie_2019|default('-')) }}
+                                        </span>
+                                        <span class="text-muted fs-12 ms-1">
+                                            ({{ runner.count_categorie|default(runner.count_categorie_2019|default('1')) }}<sup>e</sup>)
+                                        </span>
+                                    </td>
+
+                                    <td class="text-center">
+                                        {% if runner.sexe == 'F' %}
+                                            <span class="badge bg-danger-subtle text-danger px-2 py-1">
+                                                F ({{ runner.count_sexe }}<sup>e</sup>)
+                                            </span>
+                                        {% elseif runner.sexe == 'H' %}
+                                            <span class="badge bg-info-subtle text-info px-2 py-1">
+                                                H ({{ runner.count_sexe }}<sup>e</sup>)
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary-subtle text-secondary px-2 py-1">
+                                                {{ runner.sexe }} ({{ runner.count_sexe }}<sup>e</sup>)
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 230px;" title="{{ runner.club_formate }}">
+                                            {{ runner.club_formate }}
+                                        </div>
+                                    </td>
+
+                                    <td class="text-end fw-bold text-success font-monospace fs-13">
+                                        {{ runner.chrono_php|default(runner.chrono_mysql|default('-')) }}
+                                    </td>
+
+                                    {% if has_tps_reel %}
+                                        <td class="text-end text-muted font-monospace fs-12">
+                                            {{ runner.chrono_tps_reel|default('-') }}
+                                        </td>
+                                    {% endif %}
+
+                                    {% if has_temps_inter %}
+                                        <td class="text-end text-muted font-monospace fs-12">
+                                            {{ runner.temps_intermediaire|default('-') }}
+                                        </td>
+                                    {% endif %}
+
+                                    <td class="text-center">
+                                        {% if runner.qualif_ffa == 'Q' %}
+                                            <span class="badge bg-success px-2 py-1 fs-12" title="Qualifié FFA (Licencié)">
+                                                Q
+                                            </span>
+                                        {% elseif runner.qualif_ffa == 'q' %}
+                                            <span class="badge bg-success-subtle text-success border border-success px-2 py-1 fs-12" title="Temps qualificatif (Non licencié)">
+                                                q
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-end text-muted fs-12">
+                                        {% if runner.vitesse_kilo_heure is defined and runner.vitesse_kilo_heure %}
+                                            <div>{{ runner.vitesse_kilo_heure }}</div>
+                                        {% endif %}
+                                        {% if runner.vitesse_minute_kilo is defined and runner.vitesse_minute_kilo %}
+                                            <small class="text-muted-50">{{ runner.vitesse_minute_kilo }}</small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="11" class="text-center py-4 text-muted">
+                                        <i class="ri-inbox-line fs-24 d-block mb-1"></i>
+                                        Aucun arrivant trouvé pour cette course.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block vendor_scripts %}
+    <script type="module" src="{{ asset('assets/js/app.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('tableSearch');
+            const table = document.getElementById('classementTable');
+            if (!searchInput || !table) return;
+
+            searchInput.addEventListener('input', function () {
+                const query = this.value.toLowerCase().trim();
+                const rows = table.querySelectorAll('tbody tr');
+
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(query) ? '' : 'none';
+                });
+            });
+        });
+    </script>
+{% endblock %}
