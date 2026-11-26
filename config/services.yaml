@@ -7,6 +7,8 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    app.edition.includes_boilerplate: '%kernel.project_dir%/resources/legacy/includes_boilerplate_tail.inc'
+    app.edition.active_storage: '%kernel.project_dir%/var/runchrono_active_edition.txt'
 
 services:
     # default configuration for services in *this* file
@@ -18,6 +20,20 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+
+    App\Edition\Service\LegacyPaths:
+        arguments:
+            $legacyRoot: '%runchrono_legacy_root%'
+            $loadImagesDir: '%runchrono_load_images_dir%'
+            $fichierCoursePrefix: '%runchrono_fichier_course_prefix%'
+
+    App\Edition\Service\IncludesFileGenerator:
+        arguments:
+            $boilerplatePath: '%app.edition.includes_boilerplate%'
+
+    App\Edition\Service\ActiveEditionStore:
+        arguments:
+            $storagePath: '%app.edition.active_storage%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

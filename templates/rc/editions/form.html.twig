@@ -1,0 +1,256 @@
+{% extends 'partials/layouts/master.html.twig' %}
+
+{% block page_title %}{{ is_edit ? 'Modifier une édition' : 'Nouvelle édition' }}{% endblock %}
+{% block head_title %}Éditions{% endblock %}
+{% block head_sub_title %}{{ is_edit ? 'Modification' : 'Création' }}{% endblock %}
+
+{% block page_contents %}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'danger' ? 'danger' : (label == 'warning' ? 'warning' : 'success') }}">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    <form method="post" enctype="multipart/form-data" class="edition-form">
+        <input type="hidden" name="_token" value="{{ csrf_token('edition_save') }}">
+
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="card-title mb-0">Identité</h5></div>
+            <div class="card-body row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Date événement</label>
+                    <input type="date" name="event_date" class="form-control" required value="{{ payload.eventDate }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Slug (id_html)</label>
+                    <input type="text" name="slug" class="form-control" required value="{{ payload.slug }}" {{ is_edit ? 'readonly' : '' }}>
+                    <div class="form-text">id_html = YYYYMMDD_Slug</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Prévisualisation id_html</label>
+                    <input type="text" class="form-control" readonly value="{{ payload.eventDate ? payload.eventDate|replace({'-':''}) ~ '_' ~ payload.slug : '—' }}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Nom événement</label>
+                    <input type="text" name="event_name" class="form-control" required value="{{ payload.eventName }}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Libellé date (public)</label>
+                    <input type="text" name="libelle_date" class="form-control" value="{{ payload.libelleDate }}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Texte présentation</label>
+                    <textarea name="texte_presentation" class="form-control" rows="3">{{ payload.textePresentation }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="card-title mb-0">Inscription & organiser</h5></div>
+            <div class="card-body row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">URL OnSinscrit / inscription</label>
+                    <input type="url" name="site_inscription" class="form-control" value="{{ payload.siteInscription }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Site organisateur</label>
+                    <input type="url" name="site_orga" class="form-control" value="{{ payload.siteOrga }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Libellé site orga</label>
+                    <input type="text" name="site_orga_nom" class="form-control" value="{{ payload.siteOrgaNom }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Contact nom</label>
+                    <input type="text" name="contact_nom" class="form-control" value="{{ payload.contactNom }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Contact email</label>
+                    <input type="email" name="contact_email" class="form-control" value="{{ payload.contactEmail }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Contact téléphone</label>
+                    <input type="text" name="contact_tel" class="form-control" value="{{ payload.contactTel }}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Lieu (URL maps)</label>
+                    <input type="text" name="contact_lieu" class="form-control" value="{{ payload.contactLieu }}">
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="card-title mb-0">Fichiers & tables MySQL</h5></div>
+            <div class="card-body row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Affiche (nom fichier)</label>
+                    <input type="text" name="affiche_filename" class="form-control" value="{{ payload.afficheFilename }}">
+                    <input type="file" name="affiche_upload" class="form-control mt-1">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Affiche tarifs</label>
+                    <input type="text" name="affiche_tarif_filename" class="form-control" value="{{ payload.afficheTarifFilename }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Règlement (nom fichier)</label>
+                    <input type="text" name="reglement_filename" class="form-control" value="{{ payload.reglementFilename }}">
+                    <input type="file" name="reglement_upload" class="form-control mt-1">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">table_run</label>
+                    <input type="text" name="table_run" class="form-control" required value="{{ payload.tableRun ? payload.tableRun : (suggest.table_run ?? '') }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">table_dag_import</label>
+                    <input type="text" name="table_dag" class="form-control" required value="{{ payload.tableDag ? payload.tableDag : (suggest.table_dag ?? '') }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">table_intermediaire (optionnel)</label>
+                    <input type="text" name="table_intermediaire" class="form-control" value="{{ payload.tableIntermediaire }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">table_depart_tspreel (optionnel)</label>
+                    <input type="text" name="table_depart_tspreel" class="form-control" value="{{ payload.tableDepartTspreel }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Catégorie FFA</label>
+                    <input type="text" name="categorie_ffa" class="form-control" value="{{ payload.categorieFfa }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Podium scratch</label>
+                    <input type="number" name="podium" class="form-control" value="{{ payload.podium }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Podium / catégorie</label>
+                    <input type="number" name="podium_limit" class="form-control" value="{{ payload.podiumLimit }}">
+                </div>
+            </div>
+        </div>
+
+        {% for course in payload.courses %}
+            <div class="card mb-4 course-block">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Épreuve {{ course.index }}</h5>
+                </div>
+                <div class="card-body row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">nom_course_{{ course.index }}</label>
+                        <input type="text" name="courses[{{ course.index }}][nom_course]" class="form-control" value="{{ course.nomCourse }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Distance (m)</label>
+                        <input type="text" name="courses[{{ course.index }}][distance_metre]" class="form-control" value="{{ course.distanceMetre }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Heure départ</label>
+                        <input type="text" name="heure_depart_{{ course.index }}" class="form-control" value="{{ payload.heuresDepart[course.index - 1] ?? '' }}" placeholder="09:00:00">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Export OnSinscrit</label>
+                        <input type="text" name="courses[{{ course.index }}][nom_export_onsinscrit]" class="form-control" value="{{ course.nomExportOnsinscrit }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Libellé dossards (HTML)</label>
+                        <input type="text" name="courses[{{ course.index }}][dossard_label_html]" class="form-control" value="{{ course.dossardLabelHtml }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Heure défaut tab_param</label>
+                        <input type="text" name="courses[{{ course.index }}][start_time_defaut]" class="form-control" value="{{ course.startTimeDefaut }}">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Plages dossards</label>
+                        <div class="bib-rules" data-course="{{ course.index }}">
+                        {% for rule in course.bibRules %}
+                            <div class="row g-2 mb-2 bib-rule-row">
+                                <div class="col-md-3">
+                                    <select name="courses[{{ course.index }}][bib_rules][{{ loop.index0 }}][type]" class="form-select">
+                                        <option value="range" {{ rule.type == 'range' ? 'selected' : '' }}>Plage</option>
+                                        <option value="single" {{ rule.type == 'single' ? 'selected' : '' }}>Dossard unique</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="number" name="courses[{{ course.index }}][bib_rules][{{ loop.index0 }}][min]" class="form-control" placeholder="Min" value="{{ rule.min }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="number" name="courses[{{ course.index }}][bib_rules][{{ loop.index0 }}][max]" class="form-control" placeholder="Max" value="{{ rule.max }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="number" name="courses[{{ course.index }}][bib_rules][{{ loop.index0 }}][single]" class="form-control" placeholder="N° unique" value="{{ rule.single }}">
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="row g-2 mb-2 bib-rule-row">
+                                <div class="col-md-3">
+                                    <select name="courses[{{ course.index }}][bib_rules][0][type]" class="form-select">
+                                        <option value="range">Plage</option>
+                                        <option value="single">Dossard unique</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3"><input type="number" name="courses[{{ course.index }}][bib_rules][0][min]" class="form-control" placeholder="Min"></div>
+                                <div class="col-md-3"><input type="number" name="courses[{{ course.index }}][bib_rules][0][max]" class="form-control" placeholder="Max"></div>
+                                <div class="col-md-3"><input type="number" name="courses[{{ course.index }}][bib_rules][0][single]" class="form-control" placeholder="N° unique"></div>
+                            </div>
+                        {% endfor %}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mt-2 add-bib-rule" data-course="{{ course.index }}">Ajouter une plage</button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="card-title mb-0">Enregistrement</h5></div>
+            <div class="card-body">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="write_legacy_files" value="1" id="write_files" checked>
+                    <label class="form-check-label" for="write_files">Générer fichiers legacy (courses/ + includes/)</label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="create_mysql_tables" value="1" id="create_tables" checked>
+                    <label class="form-check-label" for="create_tables">Créer tables MySQL si absentes (clone année)</label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="sync_catalog" value="1" id="sync_catalog" checked>
+                    <label class="form-check-label" for="sync_catalog">Synchroniser param_inscription_manuelle</label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="set_active_edition" value="1" id="set_active">
+                    <label class="form-check-label" for="set_active">Activer cette édition (parametre_course.php)</label>
+                </div>
+                <button type="submit" class="btn btn-primary">Enregistrer l'édition</button>
+                <a href="{{ path('rc_editions_list') }}" class="btn btn-light ms-2">Annuler</a>
+            </div>
+        </div>
+    </form>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.querySelectorAll('.add-bib-rule').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const course = btn.dataset.course;
+                const container = btn.previousElementSibling;
+                const index = container.querySelectorAll('.bib-rule-row').length;
+                const row = document.createElement('div');
+                row.className = 'row g-2 mb-2 bib-rule-row';
+                row.innerHTML = `
+                    <div class="col-md-3">
+                        <select name="courses[${course}][bib_rules][${index}][type]" class="form-select">
+                            <option value="range">Plage</option>
+                            <option value="single">Dossard unique</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3"><input type="number" name="courses[${course}][bib_rules][${index}][min]" class="form-control" placeholder="Min"></div>
+                    <div class="col-md-3"><input type="number" name="courses[${course}][bib_rules][${index}][max]" class="form-control" placeholder="Max"></div>
+                    <div class="col-md-3"><input type="number" name="courses[${course}][bib_rules][${index}][single]" class="form-control" placeholder="N° unique"></div>`;
+                container.appendChild(row);
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block vendor_scripts %}
+    <script type="module" src="{{ asset('assets/js/app.js') }}"></script>
+{% endblock %}
