@@ -4,6 +4,23 @@
 <ul class="main-menu" id="all-menu-items" role="menu">
     <li class="menu-title" role="presentation">Console live</li>
 
+    {# Éditions — création / catalogue #}
+    <li class="slide {{ route starts with 'rc_editions_' ? 'open' : '' }}">
+        <a href="#!" class="side-menu__item" role="menuitem">
+            <span class="side_menu_icon"><i class="ri-calendar-event-line"></i></span>
+            <span class="side-menu__label">Éditions</span>
+            <i class="ri-arrow-down-s-line side-menu__angle"></i>
+        </a>
+        <ul class="slide-menu" role="menu">
+            <li class="slide">
+                <a href="{{ path('rc_editions_list') }}" class="side-menu__item {{ route == 'rc_editions_list' ? 'active' : '' }}" role="menuitem">Liste des éditions</a>
+            </li>
+            <li class="slide">
+                <a href="{{ path('rc_editions_new') }}" class="side-menu__item {{ route == 'rc_editions_new' ? 'active' : '' }}" role="menuitem">Nouvelle édition</a>
+            </li>
+        </ul>
+    </li>
+
     {# Phase 1 — Import DAG #}
     <li class="slide {{ route starts with 'rc_import_' ? 'open' : '' }}">
         <a href="#!" class="side-menu__item" role="menuitem">

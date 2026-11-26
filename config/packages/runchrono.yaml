@@ -1,0 +1,9 @@
+parameters:
+    # Racine du site legacy (courses/, includes/, load_images/) — à surcharger en staging via .env.local
+    runchrono.legacy_root: '%env(default:runchrono_legacy_root_default:RUNCHRONO_LEGACY_ROOT)%'
+    runchrono.legacy_root_default: 'D:/RunChrono/RCR/RUN_CHRONO_TEST'
+    runchrono.load_images_dir: '%env(default:runchrono_load_images_default:RUNCHRONO_LOAD_IMAGES_DIR)%'
+    runchrono.load_images_default: '%runchrono.legacy_root%/load_images'
+    # Préfixe stocké dans param_inscription_manuelle.fichier_course (ex. courses/2026/…/….php)
+    runchrono.fichier_course_prefix: '%env(default:runchrono_fichier_prefix_default:RUNCHRONO_FICHIER_COURSE_PREFIX)%'
+    runchrono.fichier_course_prefix_default: 'courses'
