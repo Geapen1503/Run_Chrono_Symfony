@@ -1,0 +1,560 @@
+{% extends 'partials/layouts/master.html.twig' %}
+
+{% block page_title %}Coureur (solo){% endblock %}
+{% block head_title %}Inscription — Coureur (solo){% endblock %}
+{% block head_sub_title %}Inscriptions{% endblock %}
+
+{% block page_contents %}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'error' ? 'danger' : label }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {% if evenement is null %}
+        <div class="row">
+            <div class="col-xl-8 col-lg-10">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5 text-center">
+                        <div class="avatar-lg bg-warning-subtle text-warning rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
+                            <i class="ri-calendar-close-line fs-32"></i>
+                        </div>
+                        <h5 class="fw-bold mb-2">Il n'y a pas d'événement actuellement.</h5>
+                        <p class="text-muted mb-4">
+                            Sélectionnez un événement actif pour ajouter ou modifier un coureur dans sa table d'inscriptions.
+                        </p>
+                        <div class="d-flex flex-wrap justify-content-center gap-2">
+                            <a href="{{ path('rc_participants_evenement_actif') }}" class="btn btn-primary">
+                                <i class="ri-broadcast-line me-1"></i>Choisir un événement actif
+                            </a>
+                            <a href="{{ path('rc_editions_list') }}" class="btn btn-outline-secondary">
+                                <i class="ri-calendar-event-line me-1"></i>Liste des éditions
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        {# ===== EN-TÊTE ÉVÉNEMENT ACTIF ===== #}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div>
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                <span class="badge bg-success-subtle text-success fs-12 px-3 py-2">
+                                    <i class="ri-broadcast-line me-1"></i>Événement actif
+                                </span>
+                                <span class="badge bg-primary-subtle text-primary fs-12 px-2 py-2 font-monospace">
+                                    <i class="ri-database-2-line me-1"></i>{{ evenement.table_run }}
+                                </span>
+                                <span class="badge bg-info-subtle text-info fs-12 px-2 py-2">
+                                    <i class="ri-group-line me-1"></i>{{ contexte.total_participants }} participant{{ contexte.total_participants > 1 ? 's' : '' }}
+                                </span>
+                            </div>
+                            <h4 class="fw-bold mb-1">{{ evenement.evenement }}</h4>
+                            <p class="text-muted mb-0 fs-13">
+                                <i class="ri-calendar-line me-1"></i>{{ evenement.lib_date_evenement ?: evenement.date_evenement }}
+                                <span class="mx-2">•</span>
+                                <code>{{ evenement.id_html }}</code>
+                            </p>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="{{ path('rc_participants_liste') }}" class="btn btn-outline-primary">
+                                <i class="ri-file-list-3-line me-1"></i>Liste complète
+                            </a>
+                            <a href="{{ path('rc_participants_evenement_actif') }}" class="btn btn-outline-secondary">
+                                <i class="ri-swap-line me-1"></i>Changer d'événement
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if not contexte.table_run_existe %}
+            <div class="alert alert-danger" role="alert">
+                <i class="ri-error-warning-line me-1"></i>
+                La table <code>{{ evenement.table_run }}</code> n'existe pas dans la base de données locale.
+            </div>
+        {% else %}
+            <div class="row g-4">
+                {# ===== COLONNE GAUCHE : RECHERCHE + FORMULAIRE COUREUR SOLO ===== #}
+                <div class="col-xl-7 col-lg-7">
+                    {# Recherche / chargement d'un dossard existant #}
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <div>
+                                <h5 class="card-title mb-0">
+                                    <i class="ri-search-line text-primary me-1"></i>Charger un dossard existant
+                                </h5>
+                                <p class="text-muted mb-0 fs-12">
+                                    Interroge <code>{{ evenement.table_run }}</code> pour pré-remplir la fiche en vue d'une modification.
+                                </p>
+                            </div>
+                            <a href="{{ path('rc_inscriptions_solo') }}" class="btn btn-sm btn-light" id="btnResetFormSolo">
+                                <i class="ri-refresh-line me-1"></i>Nouveau coureur
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <form method="get" action="{{ path('rc_inscriptions_solo') }}" class="row g-2 align-items-end">
+                                <div class="col-sm-7">
+                                    <label class="form-label fs-13" for="rechercheDossardInput">Numéro de dossard</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light"><i class="ri-hashtag"></i></span>
+                                        <input type="number"
+                                               min="1"
+                                               class="form-control"
+                                               id="rechercheDossardInput"
+                                               name="dossard"
+                                               placeholder="Ex. 342"
+                                               value="{{ dossard_recherche ?? '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-sm-5 d-flex gap-2">
+                                    <button type="submit" class="btn btn-info flex-grow-1">
+                                        <i class="ri-search-line me-1"></i>Rechercher
+                                    </button>
+                                </div>
+                            </form>
+
+                            {% if dossard_recherche is not null %}
+                                <div class="mt-3 mb-0 alert {{ fiche_existante ? 'alert-warning' : 'alert-info' }} py-2 px-3 fs-13">
+                                    {% if fiche_existante %}
+                                        <i class="ri-edit-box-line me-1"></i>
+                                        Dossard <strong>#{{ fiche_existante.dossard }}</strong> trouvé :
+                                        <strong>{{ fiche_existante.nom_prenom }}</strong>
+                                        ({{ fiche_existante.distance ?: '—' }}, {{ fiche_existante.categorie ?: '—' }}).
+                                    {% else %}
+                                        <i class="ri-user-add-line me-1"></i>
+                                        Aucun coureur trouvé sur le dossard <strong>#{{ dossard_recherche }}</strong> — prêt pour une nouvelle inscription.
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {# Formulaire principal Ajout / Modification Coureur Solo #}
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <h5 class="card-title mb-0">
+                                <i class="ri-user-add-line text-primary me-1"></i>Fiche coureur (Solo)
+                            </h5>
+                            <div id="etatModeBadge">
+                                {% if fiche_existante %}
+                                    <span class="badge bg-warning-subtle text-warning fs-12 px-3 py-2">
+                                        <i class="ri-edit-line me-1"></i>Mode modification — #{{ fiche_existante.dossard }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-success-subtle text-success fs-12 px-3 py-2">
+                                        <i class="ri-add-circle-line me-1"></i>Nouvelle inscription
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            {{ form_start(form, {'attr': {'id': 'coureurSoloForm'}}) }}
+                                <div id="alerteEcrasement" class="alert alert-warning d-flex align-items-center gap-2 py-2 px-3 fs-13 {{ fiche_existante ? '' : 'd-none' }}">
+                                    <i class="ri-alert-line fs-18 flex-shrink-0"></i>
+                                    <div>
+                                        Ce dossard appartient déjà à <strong id="alerteEcrasementNom">{{ fiche_existante ? fiche_existante.nom_prenom : '' }}</strong>.
+                                        L'enregistrement mettra à jour sa fiche.
+                                        <button type="button" class="btn btn-link btn-sm p-0 ms-2 align-baseline" id="btnChargerDepuisAlerte">
+                                            Charger ses informations
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        {{ form_label(form.dossard, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                                        {{ form_widget(form.dossard, {'attr': {'class': 'form-control fw-bold'}}) }}
+                                        {{ form_errors(form.dossard) }}
+                                        <div class="form-text" id="courseDetecteeInfo">
+                                            {% if course_detectee %}
+                                                Course détectée : <span class="badge bg-primary-subtle text-primary">{{ course_detectee }}</span>
+                                            {% elseif dossard_recherche and contexte.regles_dossards_actives %}
+                                                <span class="text-danger">Hors plage codée (<code>COURSE_NON_CODE</code>)</span>
+                                            {% else %}
+                                                Saisissez un numéro ou choisissez le prochain libre à droite.
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        {{ form_label(form.nom, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                                        {{ form_widget(form.nom, {'attr': {'class': 'form-control text-uppercase'}}) }}
+                                        {{ form_errors(form.nom) }}
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        {{ form_label(form.prenom, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                                        {{ form_widget(form.prenom, {'attr': {'class': 'form-control text-uppercase'}}) }}
+                                        {{ form_errors(form.prenom) }}
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        {{ form_label(form.sexe, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                                        {{ form_widget(form.sexe, {'attr': {'class': 'form-select'}}) }}
+                                        {{ form_errors(form.sexe) }}
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        {{ form_label(form.annee, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                                        {{ form_widget(form.annee, {'attr': {'class': 'form-select'}}) }}
+                                        {{ form_errors(form.annee) }}
+                                    </div>
+
+                                    <div class="col-md-4 d-flex flex-column justify-content-end">
+                                        <div class="border rounded bg-light px-3 py-2">
+                                            <div class="fs-11 text-muted text-uppercase">Catégorie FFA calculée</div>
+                                            <div class="fw-bold text-primary fs-14" id="previewCategorieFfa">—</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        {{ form_label(form.club, null, {'label_attr': {'class': 'form-label'}}) }}
+                                        {{ form_widget(form.club, {'attr': {'class': 'form-control'}}) }}
+                                        {{ form_errors(form.club) }}
+                                        <div class="form-text">Normalisé automatiquement (accents / fusions clubs).</div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        {{ form_label(form.licence, null, {'label_attr': {'class': 'form-label'}}) }}
+                                        {{ form_widget(form.licence, {'attr': {'class': 'form-control'}}) }}
+                                        {{ form_errors(form.licence) }}
+                                    </div>
+
+                                    {% set afficherDistanceManuelle = not contexte.regles_dossards_actives or (course_detectee is null and (dossard_recherche is not null or form.dossard.vars.value is not empty)) %}
+                                    <div class="col-12 {{ afficherDistanceManuelle ? '' : 'd-none' }}" id="blocDistanceManuelle">
+                                        {{ form_label(form.distanceManuelle, null, {'label_attr': {'class': 'form-label text-warning-emphasis fw-semibold'}}) }}
+                                        {{ form_widget(form.distanceManuelle, {'attr': {'class': 'form-select'}}) }}
+                                        {{ form_errors(form.distanceManuelle) }}
+                                        <div class="form-text">
+                                            Aucune plage de dossard codée ne correspond à ce numéro : sélectionnez l'épreuve cible si besoin.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <datalist id="clubsExistantsDatalist">
+                                    {% for clubExistant in contexte.clubs_existants %}
+                                        <option value="{{ clubExistant }}"></option>
+                                    {% endfor %}
+                                </datalist>
+
+                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-4 pt-3 border-top">
+                                    <span class="text-muted fs-12">
+                                        <i class="ri-information-line me-1"></i>Mise à jour des classements effective au prochain import DAG.
+                                    </span>
+                                    <button type="submit" class="btn btn-primary px-4" id="btnSoumettreCoureurSolo">
+                                        <i class="ri-save-line me-1"></i>
+                                        <span id="btnSoumettreLabel">{{ fiche_existante ? 'Mettre à jour le coureur' : 'Enregistrer le coureur' }}</span>
+                                    </button>
+                                </div>
+                            {{ form_end(form) }}
+                        </div>
+                    </div>
+                </div>
+
+                {# ===== COLONNE DROITE : ÉTAT DES DOSSARDS + ACCÈS RAPIDE ===== #}
+                <div class="col-xl-5 col-lg-5">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="ri-price-tag-3-line text-primary me-1"></i>Dossards & courses
+                            </h5>
+                            <p class="text-muted mb-0 fs-12">
+                                Cliquez sur un prochain dossard disponible pour l'utiliser dans le formulaire.
+                            </p>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr class="fs-11 text-muted text-uppercase">
+                                            <th>Course</th>
+                                            <th>Plages</th>
+                                            <th class="text-center">Inscrits</th>
+                                            <th class="text-end">Prochain libre</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for stat in contexte.stats_dossards %}
+                                            <tr>
+                                                <td>
+                                                    <div class="fw-semibold fs-13">{{ stat.nom }}</div>
+                                                    {% if stat.heure_depart and stat.heure_depart != '00:00:00' %}
+                                                        <small class="text-muted fs-11">
+                                                            <i class="ri-time-line me-1"></i>{{ stat.heure_depart|slice(0, 5) }}
+                                                        </small>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <span class="font-monospace fs-12 text-muted">{{ stat.plages_label }}</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    {% if stat.a_regles %}
+                                                        <span class="fw-semibold">{{ stat.attribues }}</span> / {{ stat.total_codes }}
+                                                        <div>
+                                                            {% if stat.complet %}
+                                                                <span class="badge bg-danger-subtle text-danger fs-11">Complet</span>
+                                                            {% else %}
+                                                                <span class="badge bg-success-subtle text-success fs-11">Reste {{ stat.restants }}</span>
+                                                            {% endif %}
+                                                        </div>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary-subtle text-secondary">{{ stat.attribues }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-end">
+                                                    {% if stat.prochain_dossard %}
+                                                        <button type="button"
+                                                                class="btn btn-sm btn-outline-primary font-monospace js-pick-dossard"
+                                                                data-dossard="{{ stat.prochain_dossard }}"
+                                                                title="Utiliser le dossard #{{ stat.prochain_dossard }}">
+                                                            #{{ stat.prochain_dossard }}
+                                                        </button>
+                                                    {% else %}
+                                                        <span class="text-muted fs-12">—</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="4" class="text-center py-3 text-muted fs-13">
+                                                    Aucune course configurée pour cet événement.
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <div>
+                                <h5 class="card-title mb-0">
+                                    <i class="ri-team-line text-primary me-1"></i>Participants enregistrés
+                                </h5>
+                                <p class="text-muted mb-0 fs-12">Filtrer par nom ou dossard pour éditer en 1 clic.</p>
+                            </div>
+                            <input type="text"
+                                   id="filtreParticipantsRapides"
+                                   class="form-control form-control-sm"
+                                   style="max-width: 190px;"
+                                   placeholder="Nom ou dossard…">
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive" style="max-height: 360px; overflow-y: auto;">
+                                <table class="table table-sm table-hover align-middle mb-0" id="tableParticipantsRapides">
+                                    <thead class="table-light sticky-top">
+                                        <tr class="fs-11 text-muted text-uppercase">
+                                            <th>Dossard</th>
+                                            <th>Coureur</th>
+                                            <th>Course</th>
+                                            <th class="text-end">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for p in contexte.participants_rapides %}
+                                            <tr data-search="{{ (p.dossard ~ ' ' ~ p.nom_prenom ~ ' ' ~ p.club ~ ' ' ~ p.distance)|lower }}">
+                                                <td class="font-monospace fw-semibold">#{{ p.dossard }}</td>
+                                                <td>
+                                                    <div class="fs-13 fw-medium">{{ p.nom_prenom }}</div>
+                                                    <small class="text-muted fs-11">
+                                                        {{ p.categorie ?: '—' }}{% if p.club %} • {{ p.club }}{% endif %}
+                                                    </small>
+                                                </td>
+                                                <td class="fs-12">{{ p.distance ?: '—' }}</td>
+                                                <td class="text-end">
+                                                    <a href="{{ path('rc_inscriptions_solo', {'dossard': p.dossard}) }}"
+                                                       class="btn btn-sm btn-light"
+                                                       title="Modifier ce coureur">
+                                                        <i class="ri-edit-line"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="4" class="text-center py-4 text-muted fs-13">
+                                                    Aucun participant dans <code>{{ evenement.table_run }}</code>.
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+{% block vendor_scripts %}
+    <script type="module" src="{{ asset('assets/js/app.js') }}"></script>
+{% endblock %}
+
+{% block page_scripts %}
+{% if evenement is not null and contexte.table_run_existe %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const lookupUrl = {{ path('rc_inscriptions_solo_lookup')|json_encode|raw }};
+    const reglesActives = {{ contexte.regles_dossards_actives ? 'true' : 'false' }};
+
+    const inputDossard = document.getElementById('{{ form.dossard.vars.id }}');
+    const inputNom = document.getElementById('{{ form.nom.vars.id }}');
+    const inputPrenom = document.getElementById('{{ form.prenom.vars.id }}');
+    const selectSexe = document.getElementById('{{ form.sexe.vars.id }}');
+    const selectAnnee = document.getElementById('{{ form.annee.vars.id }}');
+    const inputClub = document.getElementById('{{ form.club.vars.id }}');
+    const inputLicence = document.getElementById('{{ form.licence.vars.id }}');
+    const blocDistanceManuelle = document.getElementById('blocDistanceManuelle');
+
+    const courseInfo = document.getElementById('courseDetecteeInfo');
+    const alerteEcrasement = document.getElementById('alerteEcrasement');
+    const alerteEcrasementNom = document.getElementById('alerteEcrasementNom');
+    const btnChargerDepuisAlerte = document.getElementById('btnChargerDepuisAlerte');
+    const etatModeBadge = document.getElementById('etatModeBadge');
+    const btnSoumettreLabel = document.getElementById('btnSoumettreLabel');
+    const previewCategorie = document.getElementById('previewCategorieFfa');
+
+    let dernierCoureurTrouve = null;
+    let lookupTimer = null;
+
+    const PALIERS_FFA = [
+        [85, 'M10'], [80, 'M9'], [75, 'M8'], [70, 'M7'], [65, 'M6'],
+        [60, 'M5'], [55, 'M4'], [50, 'M3'], [45, 'M2'], [40, 'M1'],
+        [35, 'M0'], [23, 'SE'], [20, 'ES'], [18, 'JU'], [16, 'CA'],
+        [14, 'MI'], [12, 'BE'], [10, 'PO'], [7, 'EA'],
+    ];
+
+    function calculerCategoriePreview() {
+        if (!selectAnnee || !selectSexe || !previewCategorie) return;
+        const annee = parseInt(selectAnnee.value, 10);
+        const sexe = selectSexe.value;
+        if (!annee || !sexe) {
+            previewCategorie.textContent = '—';
+            return;
+        }
+        const now = new Date();
+        const yearNow = now.getFullYear();
+        const saison = now > new Date(yearNow, 8, 1) ? yearNow + 1 : yearNow;
+        const age = saison - annee;
+        const match = PALIERS_FFA.find(([ageMin]) => age >= ageMin);
+        previewCategorie.textContent = (match ? match[1] : 'BB') + '-' + sexe;
+    }
+
+    function mettreAJourEtatDossard(data) {
+        if (data.course_resolue) {
+            courseInfo.innerHTML = 'Course détectée : <span class="badge bg-primary-subtle text-primary"></span>';
+            courseInfo.querySelector('span').textContent = data.course_resolue;
+            if (blocDistanceManuelle && reglesActives) {
+                blocDistanceManuelle.classList.add('d-none');
+            }
+        } else if (data.hors_plage) {
+            courseInfo.innerHTML = '<span class="text-danger">Hors plage codée (<code>COURSE_NON_CODE</code>)</span>';
+            if (blocDistanceManuelle) {
+                blocDistanceManuelle.classList.remove('d-none');
+            }
+        } else if (!reglesActives) {
+            courseInfo.textContent = 'Sélectionnez la course ci-dessous (aucune plage codée détectée).';
+            if (blocDistanceManuelle) {
+                blocDistanceManuelle.classList.remove('d-none');
+            }
+        }
+
+        if (data.found && data.coureur) {
+            dernierCoureurTrouve = data.coureur;
+            if (alerteEcrasement && alerteEcrasementNom) {
+                alerteEcrasementNom.textContent = data.coureur.nom_prenom;
+                alerteEcrasement.classList.remove('d-none');
+            }
+            if (etatModeBadge) {
+                etatModeBadge.innerHTML = '<span class="badge bg-warning-subtle text-warning fs-12 px-3 py-2"><i class="ri-edit-line me-1"></i>Mode modification — #' + data.coureur.dossard + '</span>';
+            }
+            if (btnSoumettreLabel) {
+                btnSoumettreLabel.textContent = 'Mettre à jour le coureur';
+            }
+        } else {
+            dernierCoureurTrouve = null;
+            if (alerteEcrasement) alerteEcrasement.classList.add('d-none');
+            if (etatModeBadge) {
+                etatModeBadge.innerHTML = '<span class="badge bg-success-subtle text-success fs-12 px-3 py-2"><i class="ri-add-circle-line me-1"></i>Nouvelle inscription</span>';
+            }
+            if (btnSoumettreLabel) {
+                btnSoumettreLabel.textContent = 'Enregistrer le coureur';
+            }
+        }
+    }
+
+    function verifierDossard(val) {
+        const num = parseInt(val, 10);
+        if (!num || num <= 0) {
+            mettreAJourEtatDossard({ found: false, coureur: null, course_resolue: null, hors_plage: false });
+            courseInfo.textContent = 'Saisissez un numéro ou choisissez le prochain libre à droite.';
+            return;
+        }
+        fetch(lookupUrl + '?dossard=' + encodeURIComponent(num), { headers: { 'Accept': 'application/json' } })
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (data) mettreAJourEtatDossard(data);
+            })
+            .catch(() => {});
+    }
+
+    if (inputDossard) {
+        inputDossard.addEventListener('input', function () {
+            clearTimeout(lookupTimer);
+            lookupTimer = setTimeout(() => verifierDossard(inputDossard.value), 180);
+        });
+    }
+
+    if (btnChargerDepuisAlerte) {
+        btnChargerDepuisAlerte.addEventListener('click', function () {
+            if (!dernierCoureurTrouve) return;
+            if (inputNom) inputNom.value = dernierCoureurTrouve.nom || '';
+            if (inputPrenom) inputPrenom.value = dernierCoureurTrouve.prenom || '';
+            if (selectSexe) selectSexe.value = dernierCoureurTrouve.sexe || '';
+            if (selectAnnee) selectAnnee.value = dernierCoureurTrouve.annee ? String(dernierCoureurTrouve.annee) : '';
+            if (inputClub) inputClub.value = dernierCoureurTrouve.club || '';
+            if (inputLicence) inputLicence.value = dernierCoureurTrouve.licence || '';
+            calculerCategoriePreview();
+        });
+    }
+
+    document.querySelectorAll('.js-pick-dossard').forEach(btn => {
+        btn.addEventListener('click', function () {
+            if (!inputDossard) return;
+            inputDossard.value = btn.dataset.dossard || '';
+            inputDossard.focus();
+            verifierDossard(inputDossard.value);
+        });
+    });
+
+    if (selectSexe) selectSexe.addEventListener('change', calculerCategoriePreview);
+    if (selectAnnee) selectAnnee.addEventListener('change', calculerCategoriePreview);
+    calculerCategoriePreview();
+
+    const filtreRapide = document.getElementById('filtreParticipantsRapides');
+    const tableRapide = document.getElementById('tableParticipantsRapides');
+    if (filtreRapide && tableRapide) {
+        filtreRapide.addEventListener('input', function () {
+            const q = filtreRapide.value.toLowerCase().trim();
+            tableRapide.querySelectorAll('tbody tr[data-search]').forEach(row => {
+                row.style.display = (row.dataset.search || '').includes(q) ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

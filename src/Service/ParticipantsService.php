@@ -161,10 +161,16 @@ class ParticipantsService
     }
 
     /**
+     * Liste les colonnes réelles d'une table MySQL donnée.
+     *
      * @return list<string>
      */
-    private function getColonnesTable(string $tableName): array
+    public function getColonnesTable(string $tableName): array
     {
+        if (empty($tableName) || !preg_match('/^[a-zA-Z0-9_]+$/', $tableName)) {
+            return [];
+        }
+
         try {
             $rows = $this->db->fetchAllAssociative("SHOW COLUMNS FROM `{$tableName}`");
 

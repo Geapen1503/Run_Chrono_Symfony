@@ -7,3 +7,42 @@ Author: SRBThemes
 Version: 1.1.0
 File: Custom Css File
 */
+
+/* Suppression de la barre de défilement horizontale et blocage du scroll dans la navbar */
+@media (min-width: 992px) {
+  :root[data-main-layout=horizontal] .app-sidebar,
+  :root[data-main-layout=horizontal] .app-sidebar-menu,
+  :root[data-main-layout=horizontal] .app-sidebar .main-menu {
+    overflow: visible;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  :root[data-main-layout=horizontal] .app-sidebar .main-menu::-webkit-scrollbar {
+    display: none;
+  }
+
+  :root[data-main-layout=horizontal] .app-sidebar .main-menu > .slide > .side-menu__item {
+    padding-inline: 0.7rem;
+    gap: 0.45rem;
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1399.98px) {
+  :root[data-main-layout=horizontal] #sidebarMenu.container-fluid {
+    max-width: 98%;
+  }
+
+  :root[data-main-layout=horizontal] .app-sidebar .main-menu > .slide > .side-menu__item {
+    padding-inline: 0.5rem;
+    gap: 0.35rem;
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 991.98px) {
+  :root[data-main-layout=horizontal] .app-sidebar .main-menu {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+}

@@ -273,13 +273,7 @@ class RcController extends AbstractController
         return $this->placeholder('Classement TOP N', '3.3', 'Résultats');
     }
 
-    // --- Phase 4 — Ajout / modif ---
-
-    #[Route('/inscriptions/solo', name: 'rc_inscriptions_solo', methods: ['GET'])]
-    public function inscriptionsSolo(): Response
-    {
-        return $this->placeholder('Ajout / modification coureur', '4.1', 'Inscriptions');
-    }
+    // --- Phase 4 — Ajout / modif (Coureur solo géré dans RcInscriptionController) ---
 
     #[Route('/inscriptions/duo', name: 'rc_inscriptions_duo', methods: ['GET'])]
     public function inscriptionsDuo(): Response
